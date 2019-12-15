@@ -178,7 +178,7 @@ class WrapFormItem extends Component<LoginItemProps, LoginItemState> {
             </Col>
             <Col span={8}>
               <img
-                alt="验证码" 
+                alt="验证码"
                 src={otherProps.captcha}
                 className={styles.getCaptcha}
                 onClick={otherProps.onGetImgCaptcha}

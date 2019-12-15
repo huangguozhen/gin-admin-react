@@ -57,8 +57,8 @@ export const request = extend({
   timeout: 3000,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  }
+    Accept: 'application/json',
+  },
 });
 
 function checkAccessTokenExpires(expiresAt: number) {
@@ -84,13 +84,15 @@ async function getAccessToken() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `${token.token_type} ${token.access_token}`,
-        }
+          Accept: 'application/json',
+          Authorization: `${token.token_type} ${token.access_token}`,
+        },
       });
       setAccessToken(token2);
       return `${token2.token_type} ${token2.access_token}`;
-    } catch (_) {/**/}
+    } catch (_) {
+      /**/
+    }
 
     return '';
   }
@@ -98,13 +100,13 @@ async function getAccessToken() {
   return `${token.token_type} ${token.access_token}`;
 }
 
-export default async function (url: string, options?: any) {
+export default async function(url: string, options?: any) {
   return request(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': await getAccessToken(),
-    }
-  })
+      Accept: 'application/json',
+      Authorization: await getAccessToken(),
+    },
+  });
 }

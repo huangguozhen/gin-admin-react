@@ -68,16 +68,11 @@ const menuDataRender = (menuList: MenuParam[]): MenuDataItem[] =>
       authority: item.name,
       children: item.children ? menuDataRender(item.children) : [],
     };
-    
+
     return localItem;
   });
 
-const defaultFooterDom = (
-  <DefaultFooter
-    copyright="2019 技术中心出品"
-    links={[]}
-  />
-);
+const defaultFooterDom = <DefaultFooter copyright="2019 技术中心出品" links={[]} />;
 
 const footerRender: BasicLayoutProps['footerRender'] = () => defaultFooterDom;
 

@@ -61,14 +61,14 @@ class Login extends Component<LoginProps, LoginState> {
 
   onGetCaptcha = () => {
     const { dispatch } = this.props;
-    dispatch({ type: 'login/reloadCaptcha'})
-  }
+    dispatch({ type: 'login/reloadCaptcha' });
+  };
 
   onCreate = (form?: FormComponentProps['form']) => {
     this.loginForm = form;
     const { dispatch } = this.props;
-    dispatch({ type: 'login/getCaptcha'})
-  }
+    dispatch({ type: 'login/getCaptcha' });
+  };
 
   renderMessage = (content: string) => (
     <Alert style={{ marginBottom: 24 }} message={content} type="error" showIcon />
@@ -78,7 +78,7 @@ class Login extends Component<LoginProps, LoginState> {
     const { userLogin = {}, submitting } = this.props;
     const { status, message, type: loginType, captcha } = userLogin;
     const { type, autoLogin } = this.state;
-    
+
     return (
       <div className={styles.main}>
         <LoginComponents

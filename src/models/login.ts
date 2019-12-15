@@ -3,7 +3,12 @@ import { Effect } from 'dva';
 import { stringify } from 'querystring';
 import router from 'umi/router';
 
-import { fakeAccountLogin, fakeAccountLogout, getFakeCaptchaId, getFakeCaptcha } from '@/services/login';
+import {
+  fakeAccountLogin,
+  fakeAccountLogout,
+  getFakeCaptchaId,
+  getFakeCaptcha,
+} from '@/services/login';
 import { setAccessToken, clearAccessToken } from '@/utils/authority';
 import { getPageQuery } from '@/utils/utils';
 import { ConnectState } from './connect.d';
@@ -44,11 +49,11 @@ const Model: LoginModelType = {
       try {
         const response = yield call(fakeAccountLogin, payload);
         // Login successfully
-        yield put({ 
-          type: 'changeLoginStatus', 
+        yield put({
+          type: 'changeLoginStatus',
           payload: {
             status: 'ok',
-          } 
+          },
         });
         // 保存访问令牌
         setAccessToken(response);
@@ -70,27 +75,29 @@ const Model: LoginModelType = {
         }
         router.replace(redirect || '/');
       } catch (response) {
-        const { error: { message } } = yield response.json();
-        yield put({ 
-          type: 'changeLoginStatus', 
+        const {
+          error: { message },
+        } = yield response.json();
+        yield put({
+          type: 'changeLoginStatus',
           payload: {
             status: 'error',
-            message: message,
-          } 
+            message,
+          },
         });
         yield put({ type: 'getCaptcha' });
       }
     },
 
     *getCaptcha(_, { call, put }) {
-      const { captcha_id } = yield call(getFakeCaptchaId);
+      const { captcha_id: captchaId } = yield call(getFakeCaptchaId);
       yield put({
         type: 'saveCaptcha',
         payload: {
-          id: captcha_id,
-          captcha: getFakeCaptcha(captcha_id),
+          id: captchaId,
+          captcha: getFakeCaptcha(captchaId),
         },
-      })
+      });
     },
 
     *reloadCaptcha(_, { put, select }) {
@@ -100,8 +107,8 @@ const Model: LoginModelType = {
         payload: {
           id: captchaId,
           captcha: `${getFakeCaptcha(captchaId)}&reload=${Math.random()}`,
-        }
-      })
+        },
+      });
     },
 
     *logout(_, { call }) {
@@ -133,8 +140,8 @@ const Model: LoginModelType = {
       return {
         ...state,
         captchaId: payload.id,
-        captcha: payload.captcha
-      }
+        captcha: payload.captcha,
+      };
     },
   },
 };

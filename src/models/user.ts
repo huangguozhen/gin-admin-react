@@ -91,7 +91,7 @@ const UserModel: UserModelType = {
       function fillAuthority(data: MenuParam[]) {
         for (let i = 0; i < data.length; i += 1) {
           if (<string>data[i].name !== '') {
-            authority.push(<string>data[i].name)
+            authority.push(<string>data[i].name);
           }
           if (data[i].children && (<MenuParam[]>data[i].children).length > 0) {
             fillAuthority(<MenuParam[]>data[i].children);
