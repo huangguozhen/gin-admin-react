@@ -14,13 +14,14 @@ import React, { useEffect } from 'react';
 import Link from 'umi/link';
 import { Dispatch } from 'redux';
 import { connect } from 'dva';
-import { Icon, Result, Button } from 'antd';
+import { Result, Button } from 'antd';
 import { formatMessage } from 'umi-plugin-react/locale';
 
 import Authorized from '@/utils/Authorized';
 import RightContent from '@/components/GlobalHeader/RightContent';
 import { ConnectState } from '@/models/connect';
-import { isAntDesignPro, getAuthorityFromRouter } from '@/utils/utils';
+import { MenuParam } from '@/models/user';
+import { getAuthorityFromRouter } from '@/utils/utils';
 import logo from '../assets/logo.svg';
 
 const noMatch = (
@@ -45,6 +46,7 @@ export interface BasicLayoutProps extends ProLayoutProps {
   };
   settings: Settings;
   dispatch: Dispatch;
+  menus?: MenuParam[];
 }
 export type BasicLayoutContext = { [K in 'location']: BasicLayoutProps[K] } & {
   breadcrumbNameMap: {
@@ -55,79 +57,42 @@ export type BasicLayoutContext = { [K in 'location']: BasicLayoutProps[K] } & {
 /**
  * use Authorized check all menu item
  */
-const menuDataRender = (menuList: MenuDataItem[]): MenuDataItem[] =>
+const menuDataRender = (menuList: MenuParam[]): MenuDataItem[] =>
   menuList.map(item => {
-    const localItem = {
-      ...item,
+    const localItem: MenuDataItem = {
+      path: item.router || '/',
+      icon: item.icon,
+      name: item.name,
+      locale: `menu.${item.name}`,
+      hideInMenu: !!item.hidden,
+      authority: item.name,
       children: item.children ? menuDataRender(item.children) : [],
     };
-    return Authorized.check(item.authority, localItem, null) as MenuDataItem;
+    
+    return localItem;
   });
 
 const defaultFooterDom = (
   <DefaultFooter
-    copyright="2019 蚂蚁金服体验技术部出品"
-    links={[
-      {
-        key: 'Ant Design Pro',
-        title: 'Ant Design Pro',
-        href: 'https://pro.ant.design',
-        blankTarget: true,
-      },
-      {
-        key: 'github',
-        title: <Icon type="github" />,
-        href: 'https://github.com/ant-design/ant-design-pro',
-        blankTarget: true,
-      },
-      {
-        key: 'Ant Design',
-        title: 'Ant Design',
-        href: 'https://ant.design',
-        blankTarget: true,
-      },
-    ]}
+    copyright="2019 技术中心出品"
+    links={[]}
   />
 );
 
-const footerRender: BasicLayoutProps['footerRender'] = () => {
-  if (!isAntDesignPro()) {
-    return defaultFooterDom;
-  }
-  return (
-    <>
-      {defaultFooterDom}
-      <div
-        style={{
-          padding: '0px 24px 24px',
-          textAlign: 'center',
-        }}
-      >
-        <a href="https://www.netlify.com" target="_blank" rel="noopener noreferrer">
-          <img
-            src="https://www.netlify.com/img/global/badges/netlify-color-bg.svg"
-            width="82px"
-            alt="netlify logo"
-          />
-        </a>
-      </div>
-    </>
-  );
-};
+const footerRender: BasicLayoutProps['footerRender'] = () => defaultFooterDom;
 
 const BasicLayout: React.FC<BasicLayoutProps> = props => {
-  const { dispatch, children, settings, location = { pathname: '/' } } = props;
+  const { dispatch, children, settings, menus, location = { pathname: '/' } } = props;
   /**
    * constructor
    */
 
   useEffect(() => {
     if (dispatch) {
-      dispatch({
-        type: 'user/fetchCurrent',
-      });
+      dispatch({ type: 'user/fetchMenuTree' });
     }
   }, []);
+
   /**
    * init variables
    */
@@ -179,7 +144,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         );
       }}
       footerRender={footerRender}
-      menuDataRender={menuDataRender}
+      menuDataRender={() => menuDataRender(menus || [])}
       formatMessage={formatMessage}
       rightContentRender={() => <RightContent />}
       {...props}
@@ -192,7 +157,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
   );
 };
 
-export default connect(({ global, settings }: ConnectState) => ({
+export default connect(({ global, settings, user }: ConnectState) => ({
   collapsed: global.collapsed,
   settings,
+  menus: user.menus,
 }))(BasicLayout);

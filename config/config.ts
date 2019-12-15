@@ -1,15 +1,13 @@
 import { IConfig, IPlugin } from 'umi-types';
 import defaultSettings from './defaultSettings'; // https://umijs.org/config/
+
 import slash from 'slash2';
 import themePluginConfig from './themePluginConfig';
-
-const { pwa } = defaultSettings;
-
-// preview.pro.ant.design only do not use in your production ;
+const { pwa } = defaultSettings; // preview.pro.ant.design only do not use in your production ;
 // preview.pro.ant.design 专用环境变量，请不要在你的项目中使用它。
+
 const { ANT_DESIGN_PRO_ONLY_DO_NOT_USE_IN_YOUR_PRODUCTION } = process.env;
 const isAntDesignProPreview = ANT_DESIGN_PRO_ONLY_DO_NOT_USE_IN_YOUR_PRODUCTION === 'site';
-
 const plugins: IPlugin[] = [
   [
     'umi-plugin-react',
@@ -83,7 +81,7 @@ export default {
         {
           name: 'login',
           path: '/user/login',
-          component: './user/login',
+          component: './Login',
         },
       ],
     },
@@ -94,24 +92,16 @@ export default {
         {
           path: '/',
           component: '../layouts/BasicLayout',
-          authority: ['admin', 'user'],
           routes: [
             {
               path: '/',
-              redirect: '/welcome',
+              redirect: '/dashboard',
             },
             {
-              path: '/welcome',
-              name: 'welcome',
-              icon: 'smile',
-              component: './Welcome',
-            },
-            {
-              path: '/admin',
-              name: 'admin',
-              icon: 'crown',
-              component: './Admin',
-              authority: ['admin'],
+              name: 'dashboard',
+              icon: 'dashboard',
+              path: '/dashboard',
+              component: './Dashboard',
             },
             {
               component: './404',
@@ -123,7 +113,6 @@ export default {
         },
       ],
     },
-
     {
       component: './404',
     },
@@ -148,7 +137,7 @@ export default {
         resourcePath: string;
       },
       _: string,
-      localName: string,
+      localName: string
     ) => {
       if (
         context.resourcePath.includes('node_modules') ||
@@ -180,7 +169,9 @@ export default {
     '/api/v1': {
       target: 'http://localhost:10088/',
       changeOrigin: true,
-      pathRewrite: { '^/api': '/api' },
+      pathRewrite: {
+        '^/api': '/api',
+      },
     },
   },
 } as IConfig;

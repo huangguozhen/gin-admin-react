@@ -1,4 +1,4 @@
-import request from '@/utils/request';
+import request, { request as requestWithoutToken } from '@/utils/request';
 
 export interface LoginParamsType {
   username: string;
@@ -8,7 +8,7 @@ export interface LoginParamsType {
 }
 
 export async function fakeAccountLogin(params: LoginParamsType): Promise<any> {
-  return request('/pub/login', {
+  return requestWithoutToken('/pub/login', {
     method: 'POST',
     data: params,
   });
@@ -21,7 +21,7 @@ export async function fakeAccountLogout(): Promise<any> {
 }
 
 export async function getFakeCaptchaId(): Promise<any> {
-  return request('/pub/login/captchaid');
+  return requestWithoutToken('/pub/login/captchaid');
 }
 
 export function getFakeCaptcha(id: string): string {

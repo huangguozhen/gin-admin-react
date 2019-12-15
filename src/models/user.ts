@@ -1,24 +1,45 @@
 import { Effect } from 'dva';
 import { Reducer } from 'redux';
 
-import { queryCurrent, query as queryUsers } from '@/services/user';
+import { queryCurrent, queryMenuTree, query as queryUsers } from '@/services/user';
+import { setAuthority } from '@/utils/authority';
 
 export interface CurrentUser {
   avatar?: string;
+  nickname?: string;
+  username?: string;
+  role_names?: Array<string>;
+}
+
+export interface MenuAction {
+  code?: string;
   name?: string;
-  title?: string;
-  group?: string;
-  signature?: string;
-  tags?: {
-    key: string;
-    label: string;
-  }[];
-  userid?: string;
-  unreadCount?: number;
+}
+
+export interface MenuResource {
+  code?: string;
+  name?: string;
+  method?: string;
+  path?: string;
+}
+
+export interface MenuParam {
+  menu_id?: string;
+  name?: string;
+  sequence?: number;
+  icon?: string;
+  router?: string;
+  hidden?: number;
+  parent_id?: string;
+  parent_path?: string;
+  actions?: MenuAction[];
+  resources?: MenuResource[];
+  children?: MenuParam[];
 }
 
 export interface UserModelState {
   currentUser?: CurrentUser;
+  menus?: MenuParam[];
 }
 
 export interface UserModelType {
@@ -27,10 +48,11 @@ export interface UserModelType {
   effects: {
     fetch: Effect;
     fetchCurrent: Effect;
+    fetchMenuTree: Effect;
   };
   reducers: {
     saveCurrentUser: Reducer<UserModelState>;
-    changeNotifyCount: Reducer<UserModelState>;
+    saveMenus: Reducer<UserModelState>;
   };
 }
 
@@ -39,6 +61,7 @@ const UserModel: UserModelType = {
 
   state: {
     currentUser: {},
+    menus: [],
   },
 
   effects: {
@@ -56,6 +79,28 @@ const UserModel: UserModelType = {
         payload: response,
       });
     },
+    *fetchMenuTree(_, { call, put }) {
+      const response = yield call(queryMenuTree);
+      const menuData = response.list || [];
+      yield put({
+        type: 'saveMenus',
+        payload: menuData,
+      });
+
+      const authority: string[] = [];
+      function fillAuthority(data: MenuParam[]) {
+        for (let i = 0; i < data.length; i += 1) {
+          if (<string>data[i].name !== '') {
+            authority.push(<string>data[i].name)
+          }
+          if (data[i].children && (<MenuParam[]>data[i].children).length > 0) {
+            fillAuthority(<MenuParam[]>data[i].children);
+          }
+        }
+      }
+      fillAuthority(menuData);
+      setAuthority(authority);
+    },
   },
 
   reducers: {
@@ -65,19 +110,10 @@ const UserModel: UserModelType = {
         currentUser: action.payload || {},
       };
     },
-    changeNotifyCount(
-      state = {
-        currentUser: {},
-      },
-      action,
-    ) {
+    saveMenus(state, action) {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          notifyCount: action.payload.totalCount,
-          unreadCount: action.payload.unreadCount,
-        },
+        menus: action.payload || [],
       };
     },
   },

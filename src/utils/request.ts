@@ -5,7 +5,7 @@
 import { extend } from 'umi-request';
 import { notification } from 'antd';
 import moment from 'moment';
-import { getAccessToken } from '@/utils/authority';
+import { getAccessToken as getToken, setAccessToken } from '@/utils/authority';
 
 const codeMessage = {
   200: '服务器成功返回请求的数据。',
@@ -50,7 +50,7 @@ const errorHandler = (error: { response: Response }): Response => {
 /**
  * 配置request请求时的默认参数
  */
-const request = extend({
+export const request = extend({
   errorHandler, // 默认错误处理
   credentials: 'include', // 默认请求是否带上cookie
   prefix: '/api/v1',
@@ -61,4 +61,50 @@ const request = extend({
   }
 });
 
-export default request;
+function checkAccessTokenExpires(expiresAt: number) {
+  const now = moment().unix();
+  if (expiresAt - now <= 0) {
+    return -1;
+  }
+
+  if (expiresAt - now <= 600) {
+    return 0;
+  }
+
+  return 1;
+}
+
+async function getAccessToken() {
+  const token = getToken();
+  if (!token) return '';
+
+  if (checkAccessTokenExpires(token.expires_at) === 0) {
+    try {
+      const token2 = await request('/pub/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `${token.token_type} ${token.access_token}`,
+        }
+      });
+      setAccessToken(token2);
+      return `${token2.token_type} ${token2.access_token}`;
+    } catch (_) {/**/}
+
+    return '';
+  }
+
+  return `${token.token_type} ${token.access_token}`;
+}
+
+export default async function (url: string, options?: any) {
+  return request(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': await getAccessToken(),
+    }
+  })
+}
