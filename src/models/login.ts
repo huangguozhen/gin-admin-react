@@ -8,31 +8,72 @@ import {
   fakeAccountLogout,
   getFakeCaptchaId,
   getFakeCaptcha,
+  queryCurrent,
+  queryMenuTree,
 } from '@/services/login';
-import { setAccessToken, clearAccessToken } from '@/utils/authority';
+import { setAccessToken, clearAccessToken, setAuthority } from '@/utils/authority';
 import { getPageQuery } from '@/utils/utils';
 import { ConnectState } from './connect.d';
 
-export interface StateType {
+export interface CurrentUser {
+  avatar?: string;
+  nickname?: string;
+  username?: string;
+  role_names?: Array<string>;
+}
+
+export interface MenuAction {
+  code?: string;
+  name?: string;
+}
+
+export interface MenuResource {
+  code?: string;
+  name?: string;
+  method?: string;
+  path?: string;
+}
+
+export interface MenuParam {
+  menu_id?: string;
+  name?: string;
+  sequence?: number;
+  icon?: string;
+  router?: string;
+  hidden?: number;
+  parent_id?: string;
+  parent_path?: string;
+  actions?: MenuAction[];
+  resources?: MenuResource[];
+  children?: MenuParam[];
+}
+
+export interface LoginModelState {
   status?: 'ok' | 'error';
   message?: string;
   type?: string;
   captchaId?: string;
   captcha?: string;
+  currentUser?: CurrentUser;
+  menus?: MenuParam[];
 }
 
 export interface LoginModelType {
   namespace: string;
-  state: StateType;
+  state: LoginModelState;
   effects: {
     login: Effect;
     getCaptcha: Effect;
     logout: Effect;
     reloadCaptcha: Effect;
+    fetchCurrent: Effect;
+    fetchMenuTree: Effect;
   };
   reducers: {
-    changeLoginStatus: Reducer<StateType>;
-    saveCaptcha: Reducer<StateType>;
+    changeLoginStatus: Reducer<LoginModelState>;
+    saveCaptcha: Reducer<LoginModelState>;
+    saveCurrentUser: Reducer<LoginModelState>;
+    saveMenus: Reducer<LoginModelState>;
   };
 }
 
@@ -126,6 +167,35 @@ const Model: LoginModelType = {
       // 清空访问令牌
       clearAccessToken();
     },
+    *fetchCurrent(_, { call, put }) {
+      const response = yield call(queryCurrent);
+      yield put({
+        type: 'saveCurrentUser',
+        payload: response,
+      });
+    },
+    *fetchMenuTree(_, { call, put }) {
+      const response = yield call(queryMenuTree);
+      const menuData = response.list || [];
+      yield put({
+        type: 'saveMenus',
+        payload: menuData,
+      });
+
+      const authority: string[] = [];
+      function fillAuthority(data: MenuParam[]) {
+        for (let i = 0; i < data.length; i += 1) {
+          if (<string>data[i].name !== '') {
+            authority.push(<string>data[i].name);
+          }
+          if (data[i].children && (<MenuParam[]>data[i].children).length > 0) {
+            fillAuthority(<MenuParam[]>data[i].children);
+          }
+        }
+      }
+      fillAuthority(menuData);
+      setAuthority(authority);
+    },
   },
 
   reducers: {
@@ -141,6 +211,18 @@ const Model: LoginModelType = {
         ...state,
         captchaId: payload.id,
         captcha: payload.captcha,
+      };
+    },
+    saveCurrentUser(state, action) {
+      return {
+        ...state,
+        currentUser: action.payload || {},
+      };
+    },
+    saveMenus(state, action) {
+      return {
+        ...state,
+        menus: action.payload || [],
       };
     },
   },

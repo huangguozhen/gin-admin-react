@@ -7,7 +7,7 @@ import moment from 'moment';
 
 import { NoticeItem } from '@/models/global';
 import NoticeIcon from '../NoticeIcon';
-import { CurrentUser } from '@/models/user';
+import { CurrentUser } from '@/models/login';
 import { ConnectProps, ConnectState } from '@/models/connect';
 import styles from './index.less';
 
@@ -145,8 +145,8 @@ class GlobalHeaderRight extends Component<GlobalHeaderRightProps> {
   }
 }
 
-export default connect(({ user, global, loading }: ConnectState) => ({
-  currentUser: user.currentUser,
+export default connect(({ login, global, loading }: ConnectState) => ({
+  currentUser: login.currentUser,
   collapsed: global.collapsed,
   fetchingMoreNotices: loading.effects['global/fetchMoreNotices'],
   fetchingNotices: loading.effects['global/fetchNotices'],

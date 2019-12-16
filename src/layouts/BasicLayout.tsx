@@ -20,7 +20,7 @@ import { formatMessage } from 'umi-plugin-react/locale';
 import Authorized from '@/utils/Authorized';
 import RightContent from '@/components/GlobalHeader/RightContent';
 import { ConnectState } from '@/models/connect';
-import { MenuParam } from '@/models/user';
+import { MenuParam } from '@/models/login';
 import { getAuthorityFromRouter } from '@/utils/utils';
 import logo from '../assets/logo.svg';
 
@@ -85,7 +85,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
 
   useEffect(() => {
     if (dispatch) {
-      dispatch({ type: 'user/fetchMenuTree' });
+      dispatch({ type: 'login/fetchMenuTree' });
     }
   }, []);
 
@@ -136,8 +136,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         return first ? (
           <Link to={paths.join('/')}>{route.breadcrumbName}</Link>
         ) : (
-            <span>{route.breadcrumbName}</span>
-          );
+          <span>{route.breadcrumbName}</span>
+        );
       }}
       footerRender={footerRender}
       menuDataRender={() => menuDataRender(menus || [])}
@@ -156,8 +156,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
   );
 };
 
-export default connect(({ global, settings, user }: ConnectState) => ({
+export default connect(({ global, settings, login }: ConnectState) => ({
   collapsed: global.collapsed,
   settings,
-  menus: user.menus,
+  menus: login.menus,
 }))(BasicLayout);

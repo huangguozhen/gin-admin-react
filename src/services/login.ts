@@ -27,3 +27,15 @@ export async function getFakeCaptchaId(): Promise<any> {
 export function getFakeCaptcha(id: string): string {
   return `/api/v1/pub/login/captcha?id=${id}`;
 }
+
+export async function queryCurrent(): Promise<any> {
+  return request('/pub/current/user');
+}
+
+export async function queryMenuTree(): Promise<any> {
+  return request('/pub/current/menutree');
+}
+
+export async function queryNotices(): Promise<any> {
+  return request('/pub/current/notices');
+}

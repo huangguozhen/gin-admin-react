@@ -3,10 +3,9 @@ import { MenuDataItem } from '@ant-design/pro-layout';
 import { RouterTypes } from 'umi';
 import { GlobalModelState } from './global';
 import { DefaultSettings as SettingModelState } from '../../config/defaultSettings';
-import { UserModelState } from './user';
-import { StateType } from './login';
+import { LoginModelState } from './login';
 
-export { GlobalModelState, SettingModelState, UserModelState };
+export { GlobalModelState, SettingModelState, LoginModelState };
 
 export interface Loading {
   global: boolean;
@@ -15,7 +14,6 @@ export interface Loading {
     global?: boolean;
     menu?: boolean;
     setting?: boolean;
-    user?: boolean;
     login?: boolean;
   };
 }
@@ -24,8 +22,7 @@ export interface ConnectState {
   global: GlobalModelState;
   loading: Loading;
   settings: SettingModelState;
-  user: UserModelState;
-  login: StateType;
+  login: LoginModelState;
 }
 
 export interface Route extends MenuDataItem {

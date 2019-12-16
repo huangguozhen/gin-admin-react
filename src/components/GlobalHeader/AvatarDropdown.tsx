@@ -6,7 +6,7 @@ import { connect } from 'dva';
 import router from 'umi/router';
 
 import { ConnectProps, ConnectState } from '@/models/connect';
-import { CurrentUser } from '@/models/user';
+import { CurrentUser } from '@/models/login';
 import HeaderDropdown from '../HeaderDropdown';
 import styles from './index.less';
 
@@ -70,6 +70,6 @@ class AvatarDropdown extends React.Component<GlobalHeaderRightProps> {
     );
   }
 }
-export default connect(({ user }: ConnectState) => ({
-  currentUser: user.currentUser,
+export default connect(({ login }: ConnectState) => ({
+  currentUser: login.currentUser,
 }))(AvatarDropdown);
