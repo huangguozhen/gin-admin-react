@@ -67,6 +67,7 @@ const menuDataRender = (menuList: MenuParam[]): MenuDataItem[] =>
       hideInMenu: !!item.hidden,
       authority: item.name,
       children: item.children ? menuDataRender(item.children) : [],
+      actions: item.actions,
     };
 
     return localItem;
@@ -135,8 +136,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         return first ? (
           <Link to={paths.join('/')}>{route.breadcrumbName}</Link>
         ) : (
-          <span>{route.breadcrumbName}</span>
-        );
+            <span>{route.breadcrumbName}</span>
+          );
       }}
       footerRender={footerRender}
       menuDataRender={() => menuDataRender(menus || [])}
@@ -144,6 +145,9 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
       rightContentRender={() => <RightContent />}
       {...props}
       {...settings}
+      contentStyle={{
+        height: '100%',
+      }}
     >
       <Authorized authority={authorized!.authority} noMatch={noMatch}>
         {children}
