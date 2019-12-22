@@ -1,38 +1,43 @@
 import request from '@/utils/request';
-import { TableListParams } from './data.d';
 
-export async function queryRule(params?: TableListParams) {
-  return request('/api/rule', {
-    params,
+const router = 'users';
+
+export async function query(params: any) {
+  return request(`/${router}`, { params });
+}
+
+export async function get(params: any) {
+  return request(`/${router}/${params.user_id}`);
+}
+
+export async function create(params: any) {
+  return request(`/${router}`, {
+    method: 'POST',
+    data: params,
   });
 }
 
-export async function removeRule(params: { key: number[] }) {
-  return request('/api/rule', {
-    method: 'POST',
-    data: {
-      ...params,
-      method: 'delete',
-    },
+export async function update(params: any) {
+  return request(`/${router}/${params.user_id}`, {
+    method: 'PUT',
+    data: params,
   });
 }
 
-export async function addRule(params: TableListParams) {
-  return request('/api/rule', {
-    method: 'POST',
-    data: {
-      ...params,
-      method: 'post',
-    },
+export async function del(params: any) {
+  return request(`/${router}/${params.user_id}`, {
+    method: 'DELETE',
   });
 }
 
-export async function updateRule(params: TableListParams) {
-  return request('/api/rule', {
-    method: 'POST',
-    data: {
-      ...params,
-      method: 'update',
-    },
+export async function enable(params: any) {
+  return request(`/${router}/${params.user_id}/enable`, {
+    method: 'PATCH',
+  });
+}
+
+export async function disable(params: any) {
+  return request(`/${router}/${params.user_id}/disable`, {
+    method: 'PATCH',
   });
 }
