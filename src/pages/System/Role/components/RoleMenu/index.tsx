@@ -82,7 +82,6 @@ export default class RoleMenu extends PureComponent<RoleMenuProps, RoleMenuState
   };
 
   handleSave = (record: any, dataIndex: any, values: any) => {
-    console.log('record', record);
     const { dataSource } = this.state;
     const data = [...dataSource];
     const index = data.findIndex(item => item.menu_id === record.menu_id);
@@ -226,7 +225,7 @@ export default class RoleMenu extends PureComponent<RoleMenuProps, RoleMenuState
         }),
       };
     });
-    console.log('menuData', menuData)
+    
     return (
       menuData.length > 0 && (
         <Table
