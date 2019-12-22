@@ -12,6 +12,7 @@ import {
   Row, 
   Table 
 } from 'antd';
+import moment from 'moment';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import { ModelState } from './model';
 
@@ -33,9 +34,6 @@ export interface UserListState {
   selectedRows: any[];
 }
 
-@connect(({ user }: { user: ModelState }) => ({
-  user,
-}))
 class UserList extends PureComponent<UserListProps, UserListState> {
   constructor(props: UserListProps) {
     super(props);
@@ -299,7 +297,7 @@ class UserList extends PureComponent<UserListProps, UserListState> {
       {
         title: '创建时间',
         dataIndex: 'created_at',
-        render: (val: any) => <span>{val}</span>,
+        render: (val: any) => <span>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</span>,
       },
     ];
 
@@ -382,4 +380,6 @@ class UserList extends PureComponent<UserListProps, UserListState> {
   }
 }
 
-export default Form.create<UserListProps>()(UserList);
+export default connect(({ user }: { user: ModelState }) => ({
+  user,
+}))(Form.create<UserListProps>()(UserList));

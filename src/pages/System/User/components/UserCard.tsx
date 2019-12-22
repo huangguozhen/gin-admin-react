@@ -17,9 +17,6 @@ export interface UserCardProps extends FormComponentProps {
 
 export interface UserCardState {}
 
-@connect(({ user }: { user: ModelState}) => ({
-  user,
-}))
 class UserCard extends PureComponent<UserCardProps, UserCardState> {
   onOKClick = () => {
     const { form, onSubmit } = this.props;
@@ -155,4 +152,6 @@ class UserCard extends PureComponent<UserCardProps, UserCardState> {
   }
 }
 
-export default Form.create<UserCardProps>()(UserCard);
+export default connect(({ user }: { user: ModelState }) => ({
+  user,
+}))(Form.create<UserCardProps>()(UserCard));
