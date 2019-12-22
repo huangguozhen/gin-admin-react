@@ -1,236 +1,277 @@
-import { Badge, Button, Divider, Dropdown, Form, Icon, Menu, message } from 'antd';
-import React, { useState } from 'react';
+import { AnyAction, Dispatch } from 'redux';
+import { Button, Card, Col, Form, Input, Modal, Row, Table } from 'antd';
+import { PageHeaderWrapper } from '@ant-design/pro-layout';
+import { ModelState } from './model';
+import React, { PureComponent } from 'react';
 
 import { FormComponentProps } from 'antd/es/form';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import ProTable, { ProColumns, UseFetchDataAction } from '@ant-design/pro-table';
-import CreateForm from './components/CreateForm';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
-import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule, removeRule } from './service';
+import PButton from '@/components/PermButton';
+import { connect } from 'dva';
+import RoleCard from './components/RoleCard';
+import styles from './index.less';
 
-const status = ['关闭', '运行中', '已上线', '异常'];
-const statusMap = ['default', 'processing', 'success', 'error'];
-interface TableListProps extends FormComponentProps {}
+export interface RoleListProps extends FormComponentProps {
+  dispatch: Dispatch<AnyAction>;
+  // loading: any;
+  role: ModelState;
+}
 
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: FormValueType) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addRule({
-      desc: fields.desc,
+export interface RoleListState {
+  selectedRowKeys: any;
+  selectedRows: any;
+}
+
+class RoleList extends PureComponent<RoleListProps, RoleListState> {
+  state = {
+    selectedRowKeys: [],
+    selectedRows: [],
+  };
+
+  componentDidMount() {
+    this.dispatch({
+      type: 'role/fetch',
+      search: {},
+      pagination: {},
     });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
   }
-};
 
-/**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
-    });
-    hide();
+  clearSelectRows = () => {
+    const { selectedRowKeys } = this.state;
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+    this.setState({ selectedRowKeys: [], selectedRows: [] });
+  };
 
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
+  dispatch = (action: any) => {
+    const { dispatch } = this.props;
+    dispatch(action);
+  };
 
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: TableListItem[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await removeRule({
-      key: selectedRows.map(row => row.key),
-    });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
-
-const TableList: React.FC<TableListProps> = () => {
-  const [createModalVisible, handleModalVisible] = useState<boolean>(false);
-  const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  const [stepFormValues, setStepFormValues] = useState({});
-
-  const [actionRef, setActionRef] = useState<UseFetchDataAction<{ data: TableListItem[] }>>();
-  const columns: ProColumns<TableListItem>[] = [
-    {
-      title: '规则名称',
-      dataIndex: 'name',
-    },
-    {
-      title: '描述',
-      dataIndex: 'desc',
-    },
-    {
-      title: '服务调用次数',
-      dataIndex: 'callNo',
-      sorter: true,
-      renderText: (val: string) => `${val} 万`,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      filters: [
-        {
-          text: status[0],
-          value: '0',
-        },
-        {
-          text: status[1],
-          value: '1',
-        },
-        {
-          text: status[2],
-          value: '2',
-        },
-        {
-          text: status[3],
-          value: '3',
-        },
-      ],
-      valueEnum: {
-        0: '关闭',
-        1: '运行中',
-        2: '已上线',
-        3: '异常',
+  handleAddClick = () => {
+    this.dispatch({
+      type: 'role/loadForm',
+      payload: {
+        type: 'A',
       },
-      render(text, row) {
-        return <Badge status={statusMap[row.status] as 'success'} text={text} />;
-      },
-    },
-    {
-      title: '上次调度时间',
-      dataIndex: 'updatedAt',
-      sorter: true,
-      valueType: 'dateTime',
-    },
-    {
-      title: '操作',
-      dataIndex: 'option',
-      valueType: 'option',
-      render: (_, record) => (
-        <>
-          <a
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
-            }}
-          >
-            配置
-          </a>
-          <Divider type="vertical" />
-          <a href="">订阅警报</a>
-        </>
-      ),
-    },
-  ];
+    });
+  };
 
-  return (
-    <PageHeaderWrapper>
-      <ProTable<TableListItem>
-        headerTitle="查询表格"
-        onInit={setActionRef}
-        rowKey="key"
-        renderToolBar={(action, { selectedRows }) => [
-          <Button icon="plus" type="primary" onClick={() => handleModalVisible(true)}>
-            新建
-          </Button>,
-          selectedRows && selectedRows.length > 0 && (
-            <Dropdown
-              overlay={
-                <Menu
-                  onClick={async e => {
-                    if (e.key === 'remove') {
-                      await handleRemove(selectedRows);
-                      action.reload();
-                    }
-                  }}
-                  selectedKeys={[]}
+  handleEditClick = (item: any) => {
+    this.dispatch({
+      type: 'role/loadForm',
+      payload: {
+        type: 'E',
+        id: item.role_id,
+      },
+    });
+  };
+
+  handleDelClick = (item: any) => {
+    Modal.confirm({
+      title: `确定删除【角色数据：${item.name}】？`,
+      okText: '确认',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: this.handleDelOKClick.bind(this, item.role_id),
+    });
+  };
+
+  handleTableSelectRow = (record: any, selected: any) => {
+    let keys = new Array(0);
+    let rows = new Array(0);
+    if (selected) {
+      keys = [record.role_id];
+      rows = [record];
+    }
+    this.setState({
+      selectedRowKeys: keys,
+      selectedRows: rows,
+    });
+  };
+
+  handleTableChange = (pagination: any) => {
+    this.dispatch({
+      type: 'role/fetch',
+      pagination: {
+        current: pagination.current,
+        pageSize: pagination.pageSize,
+      },
+    });
+    this.clearSelectRows();
+  };
+
+  handleResetFormClick = () => {
+    const { form } = this.props;
+    form.resetFields();
+
+    this.dispatch({
+      type: 'role/fetch',
+      search: {},
+      pagination: {},
+    });
+  };
+
+  handleSearchFormSubmit = (e: any) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    const { form } = this.props;
+    form.validateFields({ force: true }, (err, values) => {
+      if (err) {
+        return;
+      }
+      this.dispatch({
+        type: 'role/fetch',
+        search: values,
+        pagination: {},
+      });
+      this.clearSelectRows();
+    });
+  };
+
+  handleDataFormSubmit = (data: any) => {
+    this.dispatch({
+      type: 'role/submit',
+      payload: data,
+    });
+    this.clearSelectRows();
+  };
+
+  handleDataFormCancel = () => {
+    this.dispatch({
+      type: 'role/changeFormVisible',
+      payload: false,
+    });
+  };
+
+  handleDelOKClick(id: any) {
+    this.dispatch({
+      type: 'role/del',
+      payload: { role_id: id },
+    });
+    this.clearSelectRows();
+  }
+
+  renderDataForm() {
+    return <RoleCard onCancel={this.handleDataFormCancel} onSubmit={this.handleDataFormSubmit} />;
+  }
+
+  renderSearchForm() {
+    const {
+      form: { getFieldDecorator },
+    } = this.props;
+
+    return (
+      <Form onSubmit={this.handleSearchFormSubmit} layout="inline">
+        <Row gutter={16}>
+          <Col md={8}>
+            <Form.Item label="角色名称">
+              {getFieldDecorator('name')(<Input placeholder="请输入" />)}
+            </Form.Item>
+          </Col>
+          <Col md={8}>
+            <div style={{ overflow: 'hidden' }}>
+              <span style={{ marginBottom: 24 }}>
+                <Button type="primary" htmlType="submit">
+                  查询
+                </Button>
+                <Button style={{ marginLeft: 8 }} onClick={this.handleResetFormClick}>
+                  重置
+                </Button>
+              </span>
+            </div>
+          </Col>
+        </Row>
+      </Form>
+    );
+  }
+
+  render() {
+    const {
+      // loading,
+      role: { data },
+    } = this.props;
+
+    const { list, pagination } = data || {};
+    const { selectedRowKeys, selectedRows } = this.state;
+
+    const columns = [
+      {
+        title: '角色名称',
+        dataIndex: 'name',
+        width: 200,
+      },
+      {
+        title: '排序值',
+        dataIndex: 'sequence',
+        width: 100,
+      },
+      {
+        title: '角色备注',
+        dataIndex: 'memo',
+      },
+    ];
+
+    const paginationProps = {
+      showSizeChanger: true,
+      showQuickJumper: true,
+      showTotal: (total: any) => <span>共{total}条</span>,
+      ...pagination,
+    };
+
+    return (
+      <PageHeaderWrapper title="角色管理">
+        <Card bordered={false}>
+          <div className={styles.tableList}>
+            <div className={styles.tableListForm}>{this.renderSearchForm()}</div>
+            <div className={styles.tableListOperator}>
+              <PButton code="add" icon="plus" type="primary" onClick={() => this.handleAddClick()}>
+                新建
+              </PButton>
+              {selectedRows.length === 1 && [
+                <PButton
+                  key="edit"
+                  code="edit"
+                  icon="edit"
+                  onClick={() => this.handleEditClick(selectedRows[0])}
                 >
-                  <Menu.Item key="remove">批量删除</Menu.Item>
-                  <Menu.Item key="approval">批量审批</Menu.Item>
-                </Menu>
-              }
-            >
-              <Button>
-                批量操作 <Icon type="down" />
-              </Button>
-            </Dropdown>
-          ),
-        ]}
-        renderTableAlert={(selectedRowKeys, selectedRows) => (
-          <div>
-            已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 项&nbsp;&nbsp;
-            <span>
-              服务调用次数总计 {selectedRows.reduce((pre, item) => pre + item.callNo, 0)} 万
-            </span>
+                  编辑
+                </PButton>,
+                <PButton
+                  key="del"
+                  code="del"
+                  icon="delete"
+                  type="danger"
+                  onClick={() => this.handleDelClick(selectedRows[0])}
+                >
+                  删除
+                </PButton>,
+              ]}
+            </div>
+            <div>
+              <Table
+                rowSelection={{
+                  selectedRowKeys,
+                  onSelect: this.handleTableSelectRow,
+                }}
+                rowKey={(record: any) => record.role_id}
+                dataSource={list}
+                columns={columns}
+                pagination={paginationProps}
+                onChange={this.handleTableChange}
+                size="small"
+              />
+            </div>
           </div>
-        )}
-        request={params => queryRule(params)}
-        columns={columns}
-      />
-      <CreateForm
-        onSubmit={async value => {
-          const success = await handleAdd(value);
-          if (success) {
-            handleModalVisible(false);
-            actionRef!.reload();
-          }
-        }}
-        onCancel={() => handleModalVisible(false)}
-        modalVisible={createModalVisible}
-      />
-      {stepFormValues && Object.keys(stepFormValues).length ? (
-        <UpdateForm
-          onSubmit={async value => {
-            const success = await handleUpdate(value);
-            if (success) {
-              handleModalVisible(false);
-              setStepFormValues({});
-              actionRef!.reload();
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setStepFormValues({});
-          }}
-          updateModalVisible={updateModalVisible}
-          values={stepFormValues}
-        />
-      ) : null}
-    </PageHeaderWrapper>
-  );
-};
+        </Card>
+        {this.renderDataForm()}
+      </PageHeaderWrapper>
+    );
+  }
+}
 
-export default Form.create<TableListProps>()(TableList);
+export default connect(({ role }: { role: ModelState }) => ({
+  role,
+}))(Form.create<RoleListProps>()(RoleList));
