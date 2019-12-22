@@ -1,236 +1,398 @@
-import { Badge, Button, Divider, Dropdown, Form, Icon, Menu, message } from 'antd';
-import React, { useState } from 'react';
+import { AnyAction, Dispatch } from 'redux';
+import { 
+  Button, 
+  Card, 
+  Col, 
+  Form, 
+  Input, 
+  Layout, 
+  Modal, 
+  Radio, 
+  Row, 
+  Table, 
+  Tree 
+} from 'antd';
+import React, { PureComponent } from 'react';
 
-import { FormComponentProps } from 'antd/es/form';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import ProTable, { ProColumns, UseFetchDataAction } from '@ant-design/pro-table';
-import CreateForm from './components/CreateForm';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
-import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule, removeRule } from './service';
+import { FormComponentProps } from 'antd/lib/form';
+import { connect } from 'dva';
+import MenuCard from './components/MenuCard';
+import { ModelState } from './model';
+import PButton from '@/components/PermButton';
+import styles from './index.less';
 
-const status = ['关闭', '运行中', '已上线', '异常'];
-const statusMap = ['default', 'processing', 'success', 'error'];
-interface TableListProps extends FormComponentProps {}
+export interface MenuListProps extends FormComponentProps {
+  dispatch: Dispatch<AnyAction>;
+  loading: any;
+  menu: ModelState;
+}
 
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: FormValueType) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addRule({
-      desc: fields.desc,
-    });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
+export interface MenuListState {
+  selectedRowKeys: Array<any>;
+  selectedRows: Array<any>;
+  treeSelectedKeys: Array<any>;
+}
+
+class MenuList extends PureComponent<MenuListProps, MenuListState> {
+  constructor(props: MenuListProps) {
+    super(props);
+    this.state = {
+      selectedRowKeys: [],
+      selectedRows: [],
+      treeSelectedKeys: [],
+    };
   }
-};
 
-/**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
+  componentDidMount() {
+    this.dispatch({
+      type: 'menu/fetchTree',
     });
-    hide();
 
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: TableListItem[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await removeRule({
-      key: selectedRows.map(row => row.key),
+    this.dispatch({
+      type: 'menu/fetch',
+      search: {},
+      pagination: {},
     });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
   }
-};
 
-const TableList: React.FC<TableListProps> = () => {
-  const [createModalVisible, handleModalVisible] = useState<boolean>(false);
-  const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  const [stepFormValues, setStepFormValues] = useState({});
+  handleEditClick = () => {
+    const { selectedRows } = this.state;
+    if (selectedRows.length === 0) {
+      return;
+    }
 
-  const [actionRef, setActionRef] = useState<UseFetchDataAction<{ data: TableListItem[] }>>();
-  const columns: ProColumns<TableListItem>[] = [
-    {
-      title: '规则名称',
-      dataIndex: 'name',
-    },
-    {
-      title: '描述',
-      dataIndex: 'desc',
-    },
-    {
-      title: '服务调用次数',
-      dataIndex: 'callNo',
-      sorter: true,
-      renderText: (val: string) => `${val} 万`,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      filters: [
-        {
-          text: status[0],
-          value: '0',
-        },
-        {
-          text: status[1],
-          value: '1',
-        },
-        {
-          text: status[2],
-          value: '2',
-        },
-        {
-          text: status[3],
-          value: '3',
-        },
-      ],
-      valueEnum: {
-        0: '关闭',
-        1: '运行中',
-        2: '已上线',
-        3: '异常',
+    const { menu_id: menuID } = selectedRows[0];
+    this.dispatch({
+      type: 'menu/loadForm',
+      payload: {
+        type: 'E',
+        id: menuID,
       },
-      render(text, row) {
-        return <Badge status={statusMap[row.status] as 'success'} text={text} />;
-      },
-    },
-    {
-      title: '上次调度时间',
-      dataIndex: 'updatedAt',
-      sorter: true,
-      valueType: 'dateTime',
-    },
-    {
-      title: '操作',
-      dataIndex: 'option',
-      valueType: 'option',
-      render: (_, record) => (
-        <>
-          <a
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
-            }}
-          >
-            配置
-          </a>
-          <Divider type="vertical" />
-          <a href="">订阅警报</a>
-        </>
-      ),
-    },
-  ];
+    });
+  };
 
-  return (
-    <PageHeaderWrapper>
-      <ProTable<TableListItem>
-        headerTitle="查询表格"
-        onInit={setActionRef}
-        rowKey="key"
-        renderToolBar={(action, { selectedRows }) => [
-          <Button icon="plus" type="primary" onClick={() => handleModalVisible(true)}>
-            新建
-          </Button>,
-          selectedRows && selectedRows.length > 0 && (
-            <Dropdown
-              overlay={
-                <Menu
-                  onClick={async e => {
-                    if (e.key === 'remove') {
-                      await handleRemove(selectedRows);
-                      action.reload();
-                    }
-                  }}
-                  selectedKeys={[]}
-                >
-                  <Menu.Item key="remove">批量删除</Menu.Item>
-                  <Menu.Item key="approval">批量审批</Menu.Item>
-                </Menu>
-              }
-            >
-              <Button>
-                批量操作 <Icon type="down" />
-              </Button>
-            </Dropdown>
-          ),
-        ]}
-        renderTableAlert={(selectedRowKeys, selectedRows) => (
-          <div>
-            已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 项&nbsp;&nbsp;
-            <span>
-              服务调用次数总计 {selectedRows.reduce((pre, item) => pre + item.callNo, 0)} 万
-            </span>
-          </div>
-        )}
-        request={params => queryRule(params)}
-        columns={columns}
-      />
-      <CreateForm
-        onSubmit={async value => {
-          const success = await handleAdd(value);
-          if (success) {
-            handleModalVisible(false);
-            actionRef!.reload();
+  handleAddClick = () => {
+    this.dispatch({
+      type: 'menu/loadForm',
+      payload: {
+        type: 'A',
+      },
+    });
+  };
+
+  handleDelClick = () => {
+    const { selectedRows } = this.state;
+    if (selectedRows.length === 0) {
+      return;
+    }
+
+    const { name, menu_id: menuID } = selectedRows[0];
+    Modal.confirm({
+      title: `确定删除【菜单数据：${name}】？`,
+      okText: '确认',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: this.handleDelOKClick.bind(this, menuID),
+    });
+  };
+
+  handleTableSelectRow = (record: any, selected: any) => {
+    let keys = new Array(0);
+    let rows = new Array(0);
+    if (selected) {
+      keys = [record.menu_id];
+      rows = [record];
+    }
+    this.setState({
+      selectedRowKeys: keys,
+      selectedRows: rows,
+    });
+  };
+
+  onTableChange = (pagination: any) => {
+    this.dispatch({
+      type: 'menu/fetch',
+      pagination: {
+        current: pagination.current,
+        pageSize: pagination.pageSize,
+      },
+    });
+    this.clearSelectRows();
+  };
+
+  onResetFormClick = () => {
+    const { form } = this.props;
+    form.resetFields();
+    this.dispatch({
+      type: 'menu/fetch',
+      search: { parent_id: this.getParentID() },
+      pagination: {},
+    });
+  };
+
+  onSearchFormSubmit = (e: any) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    const { form } = this.props;
+    form.validateFields((err, values) => {
+      if (err) {
+        return;
+      }
+      this.dispatch({
+        type: 'menu/fetch',
+        search: {
+          ...values,
+          parent_id: this.getParentID(),
+        },
+        pagination: {},
+      });
+      this.clearSelectRows();
+    });
+  };
+
+  handleFormSubmit = (data: any) => {
+    this.dispatch({
+      type: 'menu/submit',
+      payload: data,
+    });
+    this.clearSelectRows();
+  };
+
+  handleFormCancel = () => {
+    this.dispatch({
+      type: 'menu/changeFormVisible',
+      payload: false,
+    });
+  };
+
+  clearSelectRows = () => {
+    const { selectedRowKeys } = this.state;
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+    this.setState({ selectedRowKeys: [], selectedRows: [] });
+  };
+
+  dispatch = (action: any) => {
+    const { dispatch } = this.props;
+    dispatch(action);
+  };
+
+  getParentID = () => {
+    const { treeSelectedKeys } = this.state;
+    let parentID = '';
+    if (treeSelectedKeys.length > 0) {
+      [parentID] = treeSelectedKeys;
+    }
+    return parentID;
+  };
+
+  handleDelOKClick(id: any) {
+    this.dispatch({
+      type: 'menu/del',
+      payload: { menu_id: id },
+    });
+    this.clearSelectRows();
+  }
+
+  renderDataForm() {
+    return <MenuCard onCancel={this.handleFormCancel} onSubmit={this.handleFormSubmit} />;
+  }
+
+  renderTreeNodes = (data: any) =>
+    data.map((item: any) => {
+      if (item.children) {
+        return (
+          <Tree.TreeNode title={item.name} key={item.menu_id} dataRef={item}>
+            {this.renderTreeNodes(item.children)}
+          </Tree.TreeNode>
+        );
+      }
+      return <Tree.TreeNode title={item.name} key={item.menu_id} dataRef={item} />;
+    });
+
+  renderSearchForm() {
+    const {
+      form: { getFieldDecorator },
+    } = this.props;
+    return (
+      <Form onSubmit={this.onSearchFormSubmit} layout="inline">
+        <Row gutter={8}>
+          <Col span={8}>
+            <Form.Item label="菜单名称">
+              {getFieldDecorator('name')(<Input placeholder="请输入" />)}
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label="隐藏状态">
+              {getFieldDecorator('hidden', {
+                initialValue: '-1',
+              })(
+                <Radio.Group>
+                  <Radio value="-1">全部</Radio>
+                  <Radio value="0">显示</Radio>
+                  <Radio value="1">隐藏</Radio>
+                </Radio.Group>,
+              )}
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <div style={{ overflow: 'hidden' }}>
+              <span style={{ marginBottom: 24 }}>
+                <Button type="primary" htmlType="submit">
+                  查询
+                </Button>
+                <Button style={{ marginLeft: 8 }} onClick={this.onResetFormClick}>
+                  重置
+                </Button>
+              </span>
+            </div>
+          </Col>
+        </Row>
+      </Form>
+    );
+  }
+
+  render() {
+    const {
+      loading,
+      menu: { data, treeData, expandedKeys },
+    } = this.props;
+
+    const { list, pagination } = data || {};
+    const { selectedRowKeys } = this.state;
+
+    const columns = [
+      {
+        title: '菜单名称',
+        dataIndex: 'name',
+        width: 150,
+      },
+      {
+        title: '排序值',
+        dataIndex: 'sequence',
+        width: 100,
+      },
+      {
+        title: '隐藏状态',
+        dataIndex: 'hidden',
+        width: 100,
+        render: (val: any) => {
+          let title = '显示';
+          if (val === 1) {
+            title = '隐藏';
           }
-        }}
-        onCancel={() => handleModalVisible(false)}
-        modalVisible={createModalVisible}
-      />
-      {stepFormValues && Object.keys(stepFormValues).length ? (
-        <UpdateForm
-          onSubmit={async value => {
-            const success = await handleUpdate(value);
-            if (success) {
-              handleModalVisible(false);
-              setStepFormValues({});
-              actionRef!.reload();
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setStepFormValues({});
-          }}
-          updateModalVisible={updateModalVisible}
-          values={stepFormValues}
-        />
-      ) : null}
-    </PageHeaderWrapper>
-  );
-};
+          return <span>{title}</span>;
+        },
+      },
+      {
+        title: '菜单图标',
+        dataIndex: 'icon',
+        width: 100,
+      },
+      {
+        title: '访问路由',
+        dataIndex: 'router',
+      },
+    ];
 
-export default Form.create<TableListProps>()(TableList);
+    const paginationProps = {
+      showSizeChanger: true,
+      showQuickJumper: true,
+      ...pagination,
+    };
+
+    return (
+      <PageHeaderWrapper title="菜单管理">
+        <Layout>
+          <Layout.Sider
+            width={200}
+            style={{ background: '#fff', borderRight: '1px solid lightGray' }}
+          >
+            <Tree
+              expandedKeys={expandedKeys}
+              onSelect={keys => {
+                this.setState({
+                  treeSelectedKeys: keys,
+                });
+
+                const {
+                  menu: { search },
+                } = this.props;
+
+                const item = {
+                  parentID: '',
+                };
+
+                if (keys.length > 0) {
+                  [item.parentID] = keys;
+                }
+
+                this.dispatch({
+                  type: 'menu/fetch',
+                  search: { ...search, ...item },
+                  pagination: {},
+                });
+              }}
+              onExpand={keys => {
+                this.dispatch({
+                  type: 'menu/saveExpandedKeys',
+                  payload: keys,
+                });
+              }}
+            >
+              {this.renderTreeNodes(treeData)}
+            </Tree>
+          </Layout.Sider>
+          <Layout.Content>
+            <Card bordered={false}>
+              <div className={styles.tableList}>
+                <div className={styles.tableListForm}>{this.renderSearchForm()}</div>
+                <div className={styles.tableListOperator}>
+                  <PButton code="add" icon="plus" type="primary" onClick={this.handleAddClick}>
+                    新建
+                  </PButton>
+                  {selectedRowKeys.length === 1 && [
+                    <PButton key="edit" code="edit" icon="edit" onClick={this.handleEditClick}>
+                      编辑
+                    </PButton>,
+                    <PButton
+                      key="del"
+                      code="del"
+                      icon="delete"
+                      type="danger"
+                      onClick={this.handleDelClick}
+                    >
+                      删除
+                    </PButton>,
+                  ]}
+                </div>
+                <Table
+                  rowSelection={{
+                    selectedRowKeys,
+                    onSelect: this.handleTableSelectRow,
+                  }}
+                  loading={loading}
+                  rowKey={(record: any) => record.menu_id}
+                  dataSource={list}
+                  columns={columns}
+                  pagination={paginationProps}
+                  onChange={this.onTableChange}
+                  size="small"
+                />
+              </div>
+            </Card>
+          </Layout.Content>
+        </Layout>
+        {this.renderDataForm()}
+      </PageHeaderWrapper>
+    );
+  }
+}
+
+export default connect(({ menu }: { menu: ModelState }) => ({
+  menu,
+}))(Form.create<MenuListProps>()(MenuList));

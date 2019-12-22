@@ -2,7 +2,7 @@
  * request 网络请求工具
  * 更详细的 api 文档: https://github.com/umijs/umi-request
  */
-import { extend } from 'umi-request';
+import { extend, ExtendOptionsInit } from 'umi-request';
 import { notification } from 'antd';
 import moment from 'moment';
 import { getAccessToken as getToken, setAccessToken } from '@/utils/authority';
@@ -100,7 +100,7 @@ async function getAccessToken() {
   return `${token.token_type} ${token.access_token}`;
 }
 
-export default async function(url: string, options?: any) {
+export default async function(url: string, options?: ExtendOptionsInit) {
   return request(url, {
     ...options,
     headers: {

@@ -54,5 +54,5 @@ class SecurityLayout extends React.Component<SecurityLayoutProps, SecurityLayout
 
 export default connect(({ login, loading }: ConnectState) => ({
   currentUser: login.currentUser,
-  loading: loading.models.user,
+  loading: loading.models.login,
 }))(SecurityLayout);
