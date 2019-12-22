@@ -2,10 +2,10 @@ import { AnyAction, Dispatch } from 'redux';
 import { Card, Col, Form, Input, InputNumber, Modal, Row, message } from 'antd';
 import React, { PureComponent } from 'react';
 
-import { ConnectState } from '@/models/connect';
 import { FormComponentProps } from 'antd/es/form';
 import { connect } from 'dva';
 import RoleMenu from './RoleMenu';
+import { ModelState } from '../model';
 
 export interface RoleCardProps extends FormComponentProps {
   onSubmit?: any;
@@ -16,9 +16,6 @@ export interface RoleCardProps extends FormComponentProps {
 
 export interface RoleCardState {}
 
-@connect(({ role }: ConnectState) => ({
-  role,
-}))
 class RoleCard extends PureComponent<RoleCardProps, RoleCardState> {
   onOKClick = () => {
     const { form, onSubmit } = this.props;
@@ -124,4 +121,6 @@ class RoleCard extends PureComponent<RoleCardProps, RoleCardState> {
   }
 }
 
-export default Form.create<RoleCardProps>()(RoleCard);
+export default connect(({ role }: { role: ModelState }) => ({
+  role,
+}))(Form.create<RoleCardProps>()(RoleCard));
