@@ -1,13 +1,13 @@
-import { Button, Divider, Dropdown, Form, Icon, Menu, message } from 'antd';
+import { Button, Divider, Form, message } from 'antd';
 import React, { useState, useRef } from 'react';
 
 import { FormComponentProps } from 'antd/es/form';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
+import { GridContent } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule, removeRule } from './service';
+import { queryRule, updateRule, addRule } from './service';
 
 interface TableListProps extends FormComponentProps {}
 
@@ -58,28 +58,27 @@ const handleUpdate = async (fields: FormValueType) => {
  *  删除节点
  * @param selectedRows
  */
-const handleRemove = async (selectedRows: TableListItem[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await removeRule({
-      key: selectedRows.map(row => row.key),
-    });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
+// const handleRemove = async (selectedRows: TableListItem[]) => {
+//   const hide = message.loading('正在删除');
+//   if (!selectedRows) return true;
+//   try {
+//     await removeRule({
+//       key: selectedRows.map(row => row.key),
+//     });
+//     hide();
+//     message.success('删除成功，即将刷新');
+//     return true;
+//   } catch (error) {
+//     hide();
+//     message.error('删除失败，请重试');
+//     return false;
+//   }
+// };
 
 const TableList: React.FC<TableListProps> = () => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
   const [stepFormValues, setStepFormValues] = useState({});
-
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
@@ -134,49 +133,21 @@ const TableList: React.FC<TableListProps> = () => {
   ];
 
   return (
-    <PageHeaderWrapper>
+    <GridContent>
       <ProTable<TableListItem>
-        rowSelection={{ type: 'radio' }}
-        headerTitle="查询表格"
+        headerTitle={false}
         actionRef={actionRef}
         rowKey="key"
-        toolBarRender={(action, { selectedRows }) => [
+        search={false}
+        toolBarRender={() => [
           <Button icon="plus" type="primary" onClick={() => handleModalVisible(true)}>
             新建
           </Button>,
-          selectedRows && selectedRows.length > 0 && (
-            <Dropdown
-              overlay={
-                <Menu
-                  onClick={async e => {
-                    if (e.key === 'remove') {
-                      await handleRemove(selectedRows);
-                      action.reload();
-                    }
-                  }}
-                  selectedKeys={[]}
-                >
-                  <Menu.Item key="remove">批量删除</Menu.Item>
-                  <Menu.Item key="approval">批量审批</Menu.Item>
-                </Menu>
-              }
-            >
-              <Button>
-                批量操作 <Icon type="down" />
-              </Button>
-            </Dropdown>
-          ),
         ]}
-        tableAlertRender={(selectedRowKeys, selectedRows) => (
-          <div>
-            已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 项&nbsp;&nbsp;
-            <span>
-              服务调用次数总计 {selectedRows.reduce((pre, item) => pre + item.callNo, 0)} 万
-            </span>
-          </div>
-        )}
+        tableAlertRender={() => false}
         request={params => queryRule(params)}
         columns={columns}
+        rowSelection={{}}
       />
       <CreateForm
         onSubmit={async value => {
@@ -211,7 +182,7 @@ const TableList: React.FC<TableListProps> = () => {
           values={stepFormValues}
         />
       ) : null}
-    </PageHeaderWrapper>
+    </GridContent>
   );
 };
 

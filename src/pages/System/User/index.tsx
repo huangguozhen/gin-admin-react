@@ -1,24 +1,13 @@
 import React, { PureComponent } from 'react';
 import { AnyAction, Dispatch } from 'redux';
-import { 
-  Badge, 
-  Button, 
-  Card, 
-  Col, 
-  Form, 
-  Input, 
-  Modal, 
-  Radio, 
-  Row, 
-  Table 
-} from 'antd';
+import { Badge, Button, Card, Col, Form, Input, Modal, Radio, Row, Table } from 'antd';
 import moment from 'moment';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
+import { FormComponentProps } from 'antd/lib/form';
+import { connect } from 'dva';
 import { ModelState } from './model';
 
-import { FormComponentProps } from 'antd/lib/form';
 import PButton from '@/components/PermButton';
-import { connect } from 'dva';
 import RoleSelect from './components/RoleSelect';
 import UserCard from './components/UserCard';
 import styles from './index.less';
@@ -369,7 +358,7 @@ class UserList extends PureComponent<UserListProps, UserListState> {
                 columns={columns}
                 pagination={paginationProps}
                 onChange={this.onTableChange}
-                size="small"
+                size="default"
               />
             </div>
           </div>

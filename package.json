@@ -49,7 +49,7 @@
   ],
   "dependencies": {
     "@ant-design/pro-layout": "^4.8.7",
-    "@ant-design/pro-table": "^1.0.21",
+    "@ant-design/pro-table": "^1.0.26",
     "@antv/data-set": "^0.10.2",
     "antd": "^3.23.6",
     "classnames": "^2.2.6",

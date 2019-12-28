@@ -1,17 +1,5 @@
 import { AnyAction, Dispatch } from 'redux';
-import { 
-  Button, 
-  Card, 
-  Col, 
-  Form, 
-  Input, 
-  Layout, 
-  Modal, 
-  Radio, 
-  Row, 
-  Table, 
-  Tree 
-} from 'antd';
+import { Button, Card, Col, Form, Input, Layout, Modal, Radio, Row, Table, Tree } from 'antd';
 import React, { PureComponent } from 'react';
 
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
@@ -381,7 +369,7 @@ class MenuList extends PureComponent<MenuListProps, MenuListState> {
                   columns={columns}
                   pagination={paginationProps}
                   onChange={this.onTableChange}
-                  size="small"
+                  size="default"
                 />
               </div>
             </Card>

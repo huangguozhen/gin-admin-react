@@ -1,15 +1,10 @@
-import {
-  Divider, 
-  Form, 
-  Modal,
-  message,
-} from 'antd';
-import React, { useState } from 'react';
+import { Divider, Form, Modal, message } from 'antd';
+import React, { useState, useRef } from 'react';
 
 import Link from 'umi/link';
 import { FormComponentProps } from 'antd/es/form';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import ProTable, { ProColumns, UseFetchDataAction } from '@ant-design/pro-table';
+import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import PButton from '@/components/PermButton';
 import { TableListItem } from './data.d';
@@ -48,7 +43,7 @@ const handleDelete = async (productKey?: string) => {
   }
 };
 
-function handleDelClick(record: TableListItem, actionRef: UseFetchDataAction<{data: TableListItem[]}>) {
+function handleDelClick(record: TableListItem, actionRef: ActionType) {
   Modal.confirm({
     title: `确定删除【产品：${record.name}】？`,
     okText: '确认',
@@ -56,7 +51,6 @@ function handleDelClick(record: TableListItem, actionRef: UseFetchDataAction<{da
     cancelText: '取消',
     onOk: async () => {
       const success = await handleDelete(record.product_key);
-      console.log(success, actionRef);
       if (actionRef && success) actionRef!.reload();
     },
   });
@@ -65,7 +59,7 @@ function handleDelClick(record: TableListItem, actionRef: UseFetchDataAction<{da
 const TableList: React.FC<TableListProps> = () => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
 
-  const [actionRef, setActionRef] = useState<UseFetchDataAction<{ data: TableListItem[] }>>();
+  const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
       title: '产品名称',
@@ -82,7 +76,7 @@ const TableList: React.FC<TableListProps> = () => {
       valueEnum: {
         1: { text: '设备' },
         2: { text: '网关' },
-      }
+      },
     },
     {
       title: '添加时间',
@@ -101,7 +95,9 @@ const TableList: React.FC<TableListProps> = () => {
           <Divider type="vertical" />
           <Link to={`/hardware/device?product_key=${record.product_key}`}>管理设备</Link>
           <Divider type="vertical" />
-          <PButton code="del" type="link" onClick={() => handleDelClick(record, action)}>删除</PButton>
+          <PButton code="del" type="link" onClick={() => handleDelClick(record, action)}>
+            删除
+          </PButton>
         </>
       ),
     },
@@ -111,15 +107,12 @@ const TableList: React.FC<TableListProps> = () => {
     <PageHeaderWrapper>
       <ProTable<TableListItem>
         headerTitle="产品列表"
-        onInit={setActionRef}
+        actionRef={actionRef}
         rowKey="product_key"
         toolBarRender={() => [
-          <PButton 
-            code="add"
-            icon="plus" 
-            type="primary" 
-            onClick={() => handleModalVisible(true)}
-          >新建</PButton>,
+          <PButton code="add" icon="plus" type="primary" onClick={() => handleModalVisible(true)}>
+            新建
+          </PButton>,
         ]}
         request={params => query(params)}
         columns={columns}
@@ -134,7 +127,9 @@ const TableList: React.FC<TableListProps> = () => {
           const success = await handleCreate(value);
           if (success) {
             handleModalVisible(false);
-            actionRef!.reload();
+            if (actionRef.current) {
+              actionRef.current.reload();
+            }
           }
         }}
         onCancel={() => handleModalVisible(false)}

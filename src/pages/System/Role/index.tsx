@@ -1,12 +1,12 @@
 import { AnyAction, Dispatch } from 'redux';
 import { Button, Card, Col, Form, Input, Modal, Row, Table } from 'antd';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import { ModelState } from './model';
+import { connect } from 'dva';
 import React, { PureComponent } from 'react';
 
 import { FormComponentProps } from 'antd/es/form';
+import { ModelState } from './model';
 import PButton from '@/components/PermButton';
-import { connect } from 'dva';
 import RoleCard from './components/RoleCard';
 import styles from './index.less';
 
@@ -261,7 +261,7 @@ class RoleList extends PureComponent<RoleListProps, RoleListState> {
                 columns={columns}
                 pagination={paginationProps}
                 onChange={this.handleTableChange}
-                size="small"
+                size="default"
               />
             </div>
           </div>

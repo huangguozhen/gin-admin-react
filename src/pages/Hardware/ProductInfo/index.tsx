@@ -1,21 +1,39 @@
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 
+import { Dispatch } from 'redux';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import { connect } from 'dva';
 import router from 'umi/router';
 
 interface ProductInfoProps {
+  dispatch: Dispatch<any>;
   match: {
     url: string;
     path: string;
+    params: {
+      product_key?: string;
+    };
   };
   location: {
     pathname: string;
   };
 }
 
-@connect()
-class ProductInfo extends PureComponent<ProductInfoProps> {
+class ProductInfo extends Component<ProductInfoProps> {
+  componentDidMount() {
+    const {
+      dispatch,
+      match: { params },
+    } = this.props;
+
+    if (params.product_key) {
+      dispatch({
+        type: 'product/fetch',
+        key: params.product_key,
+      });
+    }
+  }
+
   handleTabChange = (key: string) => {
     const { match } = this.props;
     const url = match.url === '/' ? '' : match.url;
@@ -40,7 +58,7 @@ class ProductInfo extends PureComponent<ProductInfoProps> {
 
   getTabKey = () => {
     const { match, location } = this.props;
-    let tabKey = location.pathname.replace(match.url, '');
+    const tabKey = location.pathname.replace(match.url, '');
     if (tabKey && tabKey.startsWith('/')) {
       return tabKey.substr(1);
     }
@@ -63,17 +81,14 @@ class ProductInfo extends PureComponent<ProductInfoProps> {
       },
     ];
 
-    const mainSearch = (
-      <div>
-      </div>
-    );
+    const mainHeader = <div></div>;
 
     const { children } = this.props;
 
     return (
       <PageHeaderWrapper
         title="产品名称"
-        content={mainSearch}
+        content={mainHeader}
         tabList={tabList}
         tabActiveKey={this.getTabKey()}
         onTabChange={this.handleTabChange}
@@ -84,4 +99,4 @@ class ProductInfo extends PureComponent<ProductInfoProps> {
   }
 }
 
-export default ProductInfo;
+export default connect()(ProductInfo);

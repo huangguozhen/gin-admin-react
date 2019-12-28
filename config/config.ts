@@ -128,7 +128,23 @@ export default {
               name: 'hardware.product.info',
               path: '/hardware/product/:product_key',
               component: './Hardware/ProductInfo',
-              routes: [],
+              routes: [
+                {
+                  name: 'topic',
+                  path: '/hardware/product/:product_key/topic',
+                  component: './Hardware/ProductInfo/Topic',
+                },
+                {
+                  name: 'thing',
+                  path: '/hardware/product/:product_key/thing',
+                  component: './Hardware/ProductInfo/Thing',
+                },
+                {
+                  name: 'base',
+                  path: '/hardware/product/:product_key',
+                  component: './Hardware/ProductInfo/Basic',
+                },
+              ],
             },
             {
               name: 'hardware.product',
@@ -176,7 +192,7 @@ export default {
         resourcePath: string;
       },
       _: string,
-      localName: string
+      localName: string,
     ) => {
       if (
         context.resourcePath.includes('node_modules') ||
