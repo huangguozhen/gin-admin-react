@@ -1,17 +1,17 @@
 export interface TableListItem {
-  key: number;
-  disabled?: boolean;
-  href: string;
-  avatar: string;
+  iot_id: string;
   name: string;
-  title: string;
-  owner: string;
-  desc: string;
-  callNo: number;
-  status: number;
-  updatedAt: Date;
-  createdAt: Date;
-  progress: number;
+  product_key: string;
+  secret?: string;
+  nickname?: string;
+  utc_active?: Date;
+  utc_online?: Date;
+  fw_version?: string;
+  ip_addr?: string;
+  node_type: number;
+  status?: string;
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export interface TableListPagination {
@@ -26,11 +26,11 @@ export interface TableListData {
 }
 
 export interface TableListParams {
-  sorter?: string;
+  product_key?: string;
   status?: string;
   name?: string;
-  desc?: string;
-  key?: number;
+  nickname?: string;
+  node_type?: number;
   pageSize?: number;
   currentPage?: number;
 }

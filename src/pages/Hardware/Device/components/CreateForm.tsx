@@ -7,7 +7,11 @@ const FormItem = Form.Item;
 
 interface CreateFormProps extends FormComponentProps {
   modalVisible: boolean;
-  onSubmit: (fieldsValue: { desc: string }) => void;
+  onSubmit: (fieldsValue: {
+    product_key: string;
+    name: string;
+    nickname: string;
+  }) => void;
   onCancel: () => void;
 }
 
