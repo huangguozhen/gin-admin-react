@@ -1,8 +1,8 @@
-import * as userService from './service';
-
 import { Effect } from 'dva';
 import { Reducer } from 'redux';
 import { message } from 'antd';
+
+import * as userService from './service';
 
 export interface ModelState {
   search?: any;

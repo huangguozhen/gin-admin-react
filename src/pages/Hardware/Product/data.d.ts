@@ -5,7 +5,7 @@ export interface TableListItem {
   node_type: number;
   net_type: number;
   data_format: number;
-  description: number;
+  description?: number;
   status?: number;
   updated_at?: Date;
   created_at?: Date;

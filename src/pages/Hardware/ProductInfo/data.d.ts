@@ -1,22 +1,12 @@
-export interface BasicGood {
-  id: string;
-  name?: string;
-  barcode?: string;
-  price?: string;
-  num?: string | number;
-  amount?: string | number;
-}
-
-export interface BasicProgress {
-  key: string;
-  time: string;
-  rate: string;
-  status: string;
-  operator: string;
-  cost: string;
-}
-
-export interface BasicProfileDataType {
-  basicGoods: BasicGood[];
-  basicProgress: BasicProgress[];
+export interface DataItem {
+  name: string;
+  secret?: string;
+  product_key?: string;
+  node_type?: number;
+  net_type?: number;
+  data_format?: number;
+  description?: number;
+  status?: number;
+  updated_at?: Date;
+  created_at?: Date;
 }

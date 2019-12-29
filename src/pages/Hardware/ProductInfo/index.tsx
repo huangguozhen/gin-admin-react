@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 
 import { Dispatch } from 'redux';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import { connect } from 'dva';
+import { Descriptions  } from 'antd';
+import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import router from 'umi/router';
+import { ProductStateType } from './model';
+import { DataItem } from './data.d';
 
 interface ProductInfoProps {
   dispatch: Dispatch<any>;
@@ -17,6 +20,7 @@ interface ProductInfoProps {
   location: {
     pathname: string;
   };
+  data: DataItem;
 }
 
 class ProductInfo extends Component<ProductInfoProps> {
@@ -52,10 +56,6 @@ class ProductInfo extends Component<ProductInfoProps> {
     }
   };
 
-  handleFormSubmit = (value: string) => {
-    console.log(value);
-  };
-
   getTabKey = () => {
     const { match, location } = this.props;
     const tabKey = location.pathname.replace(match.url, '');
@@ -66,28 +66,29 @@ class ProductInfo extends Component<ProductInfoProps> {
   };
 
   render() {
-    const tabList = [
-      {
-        key: 'info',
-        tab: '产品信息',
-      },
-      {
-        key: 'topic',
-        tab: 'Topic类列表',
-      },
-      {
-        key: 'thing',
-        tab: '功能定义',
-      },
-    ];
+    const tabList = [{
+      key: 'info',
+      tab: '产品信息',
+    },{
+      key: 'topic',
+      tab: 'Topic类列表',
+    },{
+      key: 'thing',
+      tab: '功能定义',
+    }];
 
-    const mainHeader = <div></div>;
+    const { data } = this.props;
+    const mainHeader = data && (<Descriptions>
+      <Descriptions.Item label="Product Key">{data.product_key}</Descriptions.Item>
+      <Descriptions.Item label="Product Secret">{data.secret}</Descriptions.Item>
+      <Descriptions.Item label="设备管理">{0}</Descriptions.Item>
+    </Descriptions>);
 
     const { children } = this.props;
 
     return (
       <PageHeaderWrapper
-        title="产品名称"
+        title={data && data.name}
         content={mainHeader}
         tabList={tabList}
         tabActiveKey={this.getTabKey()}
@@ -99,4 +100,6 @@ class ProductInfo extends Component<ProductInfoProps> {
   }
 }
 
-export default connect()(ProductInfo);
+export default connect(({ product }: { product: ProductStateType }) => ({
+  data: product.data,
+}))(ProductInfo);

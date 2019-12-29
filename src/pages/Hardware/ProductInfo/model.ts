@@ -1,23 +1,26 @@
 import { AnyAction, Reducer } from 'redux';
 
 import { EffectsCommandMap } from 'dva';
+import { DataItem } from './data.d';
 import { query } from './service';
 
-export interface StateType {}
+export interface ProductStateType {
+  data: DataItem;
+}
 
 export type Effect = (
   action: AnyAction,
-  effects: EffectsCommandMap & { select: <T>(func: (state: StateType) => T) => T },
+  effects: EffectsCommandMap & { select: <T>(func: (state: ProductStateType) => T) => T },
 ) => void;
 
 export interface ModelType {
   namespace: string;
-  state: StateType;
+  state: ProductStateType;
   effects: {
     fetch: Effect;
   };
   reducers: {
-    show: Reducer<StateType>;
+    save: Reducer<ProductStateType>;
   };
 }
 
@@ -25,25 +28,24 @@ const Model: ModelType = {
   namespace: 'product',
 
   state: {
-    basicGoods: [],
+    data: {
+      name: '',
+    },
   },
 
   effects: {
     *fetch({ key }, { call, put }) {
       const response = yield call(query, { key });
       yield put({
-        type: 'show',
+        type: 'save',
         payload: response,
       });
     },
   },
 
   reducers: {
-    show(state, { payload }) {
-      return {
-        ...state,
-        ...payload,
-      };
+    save(state, { payload }) {
+      return { ...state, data: payload };
     },
   },
 };
