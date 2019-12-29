@@ -1,17 +1,19 @@
 export interface TableListItem {
-  key: number;
-  disabled?: boolean;
-  href: string;
-  avatar: string;
-  name: string;
-  title: string;
-  owner: string;
-  desc: string;
-  callNo: number;
-  status: number;
-  updatedAt: Date;
-  createdAt: Date;
-  progress: number;
+  thing_id?: string;
+  product_key: string;
+  func_type: string;
+  identifier: string;
+  func_name: string;
+  data_type?: string;
+  spec?: string;
+  access_mode?: string;
+  input_data?: string;
+  output_data?: string;
+  call_type?: string;
+  event_type?: string;
+  description?: string;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface TableListPagination {
@@ -26,11 +28,10 @@ export interface TableListData {
 }
 
 export interface TableListParams {
-  sorter?: string;
-  status?: string;
-  name?: string;
-  desc?: string;
-  key?: number;
+  identifier?: string;
+  func_type?: string;
+  func_name?: string;
+  product_key: string;
   pageSize?: number;
   currentPage?: number;
 }

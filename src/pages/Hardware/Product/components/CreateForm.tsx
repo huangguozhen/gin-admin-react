@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Input, Radio, Select, Modal } from 'antd';
 import { FormComponentProps } from 'antd/es/form';
-import { TableListItem } from '../data';
+import { TableListItem } from '../data.d';
 
 const FormItem = Form.Item;
 

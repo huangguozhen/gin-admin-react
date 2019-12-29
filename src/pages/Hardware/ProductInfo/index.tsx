@@ -5,6 +5,7 @@ import { connect } from 'dva';
 import { Descriptions  } from 'antd';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import router from 'umi/router';
+import Link from 'umi/link';
 import { ProductStateType } from './model';
 import { DataItem } from './data.d';
 
@@ -81,7 +82,10 @@ class ProductInfo extends Component<ProductInfoProps> {
     const mainHeader = data && (<Descriptions>
       <Descriptions.Item label="Product Key">{data.product_key}</Descriptions.Item>
       <Descriptions.Item label="Product Secret">{data.secret}</Descriptions.Item>
-      <Descriptions.Item label="设备管理">{0}</Descriptions.Item>
+      <Descriptions.Item label="设备数">
+        <span style={{ marginRight: 5 }}>{0}</span>
+        <Link to={`/hardware/device?product_key=${data.product_key}`}>前往管理</Link>
+      </Descriptions.Item>
     </Descriptions>);
 
     const { children } = this.props;

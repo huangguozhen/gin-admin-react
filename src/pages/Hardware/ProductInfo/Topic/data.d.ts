@@ -1,17 +1,15 @@
 export interface TableListItem {
-  key: number;
-  disabled?: boolean;
-  href: string;
-  avatar: string;
-  name: string;
-  title: string;
-  owner: string;
-  desc: string;
-  callNo: number;
-  status: number;
-  updatedAt: Date;
-  createdAt: Date;
-  progress: number;
+  topic_id?: string;
+  product_key: string;
+  username?: string;
+  ip_addr?: string;
+  client_id?: string;
+  topic: string;
+  access: number;
+  allow: number;
+  description?: string;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface TableListPagination {
@@ -26,11 +24,10 @@ export interface TableListData {
 }
 
 export interface TableListParams {
-  sorter?: string;
-  status?: string;
-  name?: string;
-  desc?: string;
-  key?: number;
+  access?: number;
+  allow?: number;
+  topic?: string;
+  product_key: string;
   pageSize?: number;
   currentPage?: number;
 }

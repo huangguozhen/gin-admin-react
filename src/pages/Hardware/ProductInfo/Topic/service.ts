@@ -1,38 +1,30 @@
 import request from '@/utils/request';
-import { TableListParams } from './data.d';
+import { TableListData, TableListParams, TableListItem } from './data.d';
 
-export async function queryRule(params?: TableListParams) {
-  return request('/rule', {
-    params,
+export async function query(params?: TableListParams) {
+  const data: TableListData = await request('/topics', { params });
+  return {
+    data: data.list,
+    ...data.pagination,
+  };
+}
+
+export async function del(params: { topic_id: string }) {
+  return request(`/topics/${params.topic_id}`, {
+    method: 'DELETE',
   });
 }
 
-export async function removeRule(params: { key: number[] }) {
-  return request('/rule', {
+export async function create(data: TableListItem) {
+  return request('/topics', {
+    data,
     method: 'POST',
-    data: {
-      ...params,
-      method: 'delete',
-    },
   });
 }
 
-export async function addRule(params: TableListParams) {
-  return request('/rule', {
-    method: 'POST',
-    data: {
-      ...params,
-      method: 'post',
-    },
-  });
-}
-
-export async function updateRule(params: TableListParams) {
-  return request('/rule', {
-    method: 'POST',
-    data: {
-      ...params,
-      method: 'update',
-    },
+export async function update(data: TableListItem) {
+  return request(`/topics/${data.topic_id}`, {
+    data,
+    method: 'PUT',
   });
 }

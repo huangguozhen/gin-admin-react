@@ -1,31 +1,31 @@
-import { Button, Divider, Form, message } from 'antd';
+import { Button, Divider, Form, Modal, message } from 'antd';
 import React, { useState, useRef } from 'react';
 
 import { FormComponentProps } from 'antd/es/form';
 import { GridContent } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule } from './service';
+import { query, update, create, del } from './service';
 
-interface TableListProps extends FormComponentProps {}
+interface TableListProps extends FormComponentProps {
+  match: {
+    params: {
+      product_key: string;
+    };
+  };
+}
 
 /**
  * 添加节点
  * @param fields
  */
-const handleAdd = async (fields: FormValueType) => {
-  const hide = message.loading('正在添加');
+const handleAdd = async (fields: TableListItem) => {
   try {
-    await addRule({
-      desc: fields.desc,
-    });
-    hide();
+    await create(fields);
     message.success('添加成功');
     return true;
   } catch (error) {
-    hide();
     message.error('添加失败请重试！');
     return false;
   }
@@ -35,123 +35,124 @@ const handleAdd = async (fields: FormValueType) => {
  * 更新节点
  * @param fields
  */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
+const handleUpdate = async (fields: TableListItem) => {
   try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
-    });
-    hide();
-
-    message.success('配置成功');
+    await update(fields);
+    message.success('保存成功');
     return true;
   } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
+    message.error('保存失败请重试！');
     return false;
   }
 };
 
 /**
  *  删除节点
- * @param selectedRows
+ * @param topicId
  */
-// const handleRemove = async (selectedRows: TableListItem[]) => {
-//   const hide = message.loading('正在删除');
-//   if (!selectedRows) return true;
-//   try {
-//     await removeRule({
-//       key: selectedRows.map(row => row.key),
-//     });
-//     hide();
-//     message.success('删除成功，即将刷新');
-//     return true;
-//   } catch (error) {
-//     hide();
-//     message.error('删除失败，请重试');
-//     return false;
-//   }
-// };
+const handleDelete = async (topicId?: string) => {
+  if (!topicId) return true;
+  try {
+    await del({ topic_id: topicId });
+    message.success('删除成功，即将刷新');
+    return true;
+  } catch (error) {
+    message.error('删除失败，请重试');
+    return false;
+  }
+};
 
-const TableList: React.FC<TableListProps> = () => {
-  const [createModalVisible, handleModalVisible] = useState<boolean>(false);
-  const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  const [stepFormValues, setStepFormValues] = useState({});
+const handleDelClick = (record: TableListItem, actionRef: ActionType) => {
+  Modal.confirm({
+    title: `确定删除【Topic：${record.topic}】？`,
+    okText: '确认',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: async () => {
+      const success = await handleDelete(record.topic_id);
+      if (actionRef && success) actionRef!.reload();
+    },
+  });
+};
+
+const TableList: React.FC<TableListProps> = ({ match }) => {
+  const [ModalVisible, handleModalVisible] = useState<boolean>(false);
+  const [formValues, setFormValues] = useState<TableListItem>({});
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
-      title: '规则名称',
-      dataIndex: 'name',
+      title: 'Topic类',
+      dataIndex: 'topic',
     },
     {
-      title: '描述',
-      dataIndex: 'desc',
-    },
-    {
-      title: '服务调用次数',
-      dataIndex: 'callNo',
-      sorter: true,
-      renderText: (val: string) => `${val} 万`,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
+      title: '权限',
+      dataIndex: 'access',
       valueEnum: {
-        0: { text: '关闭', status: 'Default' },
-        1: { text: '运行中', status: 'Processing' },
-        2: { text: '已上线', status: 'Success' },
-        3: { text: '异常', status: 'Error' },
+        1: { text: '发布' },
+        2: { text: '订阅' },
+        3: { text: '全部' },
       },
     },
     {
-      title: '上次调度时间',
-      dataIndex: 'updatedAt',
-      sorter: true,
-      valueType: 'dateTime',
+      title: '描述',
+      hideInSearch: true,
+      dataIndex: 'description',
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      render: (_, record) => (
-        <>
-          <a
+      render: (_, record, _i, action) => {
+        if (record.topic.startsWith('/ota') || record.topic.startsWith('/sys')) {
+          return null;
+        }
+        return (<>
+          <Button 
+            type="link" 
             onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
+              handleModalVisible(true);
+              setFormValues(record);
             }}
-          >
-            配置
-          </a>
+          >修改</Button>
           <Divider type="vertical" />
-          <a href="">订阅警报</a>
-        </>
-      ),
+          <Button 
+            type="link" 
+            onClick={() => handleDelClick(record, action)}
+          >删除</Button>
+        </>);
+      }
     },
   ];
 
+  const productKey = match.params.product_key;
   return (
     <GridContent>
       <ProTable<TableListItem>
         headerTitle={false}
         actionRef={actionRef}
-        rowKey="key"
+        rowKey="topic_id"
         search={false}
         toolBarRender={() => [
-          <Button icon="plus" type="primary" onClick={() => handleModalVisible(true)}>
-            新建
+          <Button type="primary" onClick={() => handleModalVisible(true)}>
+            定义Topic类
           </Button>,
         ]}
         tableAlertRender={() => false}
-        request={params => queryRule(params)}
+        request={params => query({ ...params, product_key: productKey })}
         columns={columns}
-        rowSelection={{}}
+        options={{
+          fullScreen: false,
+          setting: false,
+          reload: true,
+        }}
       />
       <CreateForm
         onSubmit={async value => {
-          const success = await handleAdd(value);
+          const success = await handleAdd({
+            ...value,
+            allow: 1,
+            product_key: productKey,
+          });
           if (success) {
             handleModalVisible(false);
             if (actionRef.current) {
@@ -160,26 +161,29 @@ const TableList: React.FC<TableListProps> = () => {
           }
         }}
         onCancel={() => handleModalVisible(false)}
-        modalVisible={createModalVisible}
+        modalVisible={ModalVisible}
       />
-      {stepFormValues && Object.keys(stepFormValues).length ? (
-        <UpdateForm
+      {formValues && Object.keys(formValues).length ? (
+        <CreateForm
           onSubmit={async value => {
-            const success = await handleUpdate(value);
+            const success = await handleUpdate({
+              ...formValues,
+              ...value,
+            });
             if (success) {
               handleModalVisible(false);
-              setStepFormValues({});
+              setFormValues({});
               if (actionRef.current) {
                 actionRef.current.reload();
               }
             }
           }}
           onCancel={() => {
-            handleUpdateModalVisible(false);
-            setStepFormValues({});
+            handleModalVisible(false);
+            setFormValues({});
           }}
-          updateModalVisible={updateModalVisible}
-          values={stepFormValues}
+          modalVisible={ModalVisible}
+          values={formValues}
         />
       ) : null}
     </GridContent>

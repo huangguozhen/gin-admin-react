@@ -33,7 +33,11 @@ const dataFormatEnum = {
 const ProductBasic: React.FC<ProductBasicProps> = ({ data }) => (
   <GridContent>
     <Card bordered={false}>
-      <Descriptions bordered style={{ marginBottom: 32 }}>
+      <Descriptions 
+        bordered 
+        title="产品信息"
+        style={{ marginBottom: 32 }}
+      >
         <Descriptions.Item label="产品名称">{data.name}</Descriptions.Item>
         <Descriptions.Item label="节点类型">{nodeTypeEnum[data.node_type || 1]}</Descriptions.Item>
         <Descriptions.Item label="创建时间">{moment(data.created_at).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>

@@ -5,22 +5,26 @@ import { FormComponentProps } from 'antd/es/form';
 import { GridContent } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
+// import UpdateForm, { FormValueType } from './components/UpdateForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule } from './service';
+import { query, create } from './service';
 
-interface TableListProps extends FormComponentProps {}
+interface TableListProps extends FormComponentProps {
+  match: {
+    params: {
+      product_key: string;
+    };
+  };
+}
 
 /**
  * 添加节点
  * @param fields
  */
-const handleAdd = async (fields: FormValueType) => {
+const handleAdd = async (fields: TableListItem) => {
   const hide = message.loading('正在添加');
   try {
-    await addRule({
-      desc: fields.desc,
-    });
+    await create(fields);
     hide();
     message.success('添加成功');
     return true;
@@ -35,24 +39,24 @@ const handleAdd = async (fields: FormValueType) => {
  * 更新节点
  * @param fields
  */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
-    });
-    hide();
+// const handleUpdate = async (fields: FormValueType) => {
+//   const hide = message.loading('正在配置');
+//   try {
+//     await updateRule({
+//       name: fields.name,
+//       desc: fields.desc,
+//       key: fields.key,
+//     });
+//     hide();
 
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
+//     message.success('配置成功');
+//     return true;
+//   } catch (error) {
+//     hide();
+//     message.error('配置失败请重试！');
+//     return false;
+//   }
+// };
 
 /**
  *  删除节点
@@ -75,79 +79,64 @@ const handleUpdate = async (fields: FormValueType) => {
 //   }
 // };
 
-const TableList: React.FC<TableListProps> = () => {
+const TableList: React.FC<TableListProps> = ({ match }) => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
-  const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  const [stepFormValues, setStepFormValues] = useState({});
+  // const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
+  // const [stepFormValues, setStepFormValues] = useState({});
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
-      title: '规则名称',
-      dataIndex: 'name',
+      title: '功能类型',
+      dataIndex: 'func_type',
     },
     {
-      title: '描述',
-      dataIndex: 'desc',
+      title: '功能名称',
+      dataIndex: 'func_name',
     },
     {
-      title: '服务调用次数',
-      dataIndex: 'callNo',
-      sorter: true,
-      renderText: (val: string) => `${val} 万`,
+      title: '标识符',
+      dataIndex: 'identifier',
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      valueEnum: {
-        0: { text: '关闭', status: 'Default' },
-        1: { text: '运行中', status: 'Processing' },
-        2: { text: '已上线', status: 'Success' },
-        3: { text: '异常', status: 'Error' },
-      },
+      title: '数据类型',
+      dataIndex: 'data_type',
+      valueEnum: {},
     },
     {
-      title: '上次调度时间',
-      dataIndex: 'updatedAt',
-      sorter: true,
-      valueType: 'dateTime',
+      title: '数据定义',
+      dataIndex: 'spec',
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      render: (_, record) => (
-        <>
-          <a
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
-            }}
-          >
-            配置
-          </a>
-          <Divider type="vertical" />
-          <a href="">订阅警报</a>
-        </>
+      render: () => (
+        <></>
       ),
     },
   ];
 
+  const productKey = match.params.product_key;
   return (
     <GridContent>
       <ProTable<TableListItem>
         headerTitle={false}
         actionRef={actionRef}
-        rowKey="key"
+        rowKey="thing_id"
         search={false}
         toolBarRender={() => [
-          <Button icon="plus" type="primary" onClick={() => handleModalVisible(true)}>
-            新建
+          <Button type="primary" onClick={() => handleModalVisible(true)}>
+            添加功能
           </Button>,
         ]}
         tableAlertRender={() => false}
-        request={params => queryRule(params)}
+        request={params => query({ ...params, product_key: productKey })}
         columns={columns}
-        rowSelection={{}}
+        options={{
+          fullScreen: false,
+          setting: false,
+          reload: true,
+        }}
       />
       <CreateForm
         onSubmit={async value => {
@@ -162,7 +151,7 @@ const TableList: React.FC<TableListProps> = () => {
         onCancel={() => handleModalVisible(false)}
         modalVisible={createModalVisible}
       />
-      {stepFormValues && Object.keys(stepFormValues).length ? (
+      {/* {stepFormValues && Object.keys(stepFormValues).length ? (
         <UpdateForm
           onSubmit={async value => {
             const success = await handleUpdate(value);
@@ -181,7 +170,7 @@ const TableList: React.FC<TableListProps> = () => {
           updateModalVisible={updateModalVisible}
           values={stepFormValues}
         />
-      ) : null}
+      ) : null} */}
     </GridContent>
   );
 };
