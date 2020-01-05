@@ -10,8 +10,8 @@ export interface TableListItem {
   ip_addr?: string;
   node_type?: number;
   status?: string;
-  updatedAt?: Date;
-  createdAt?: Date;
+  updated_at?: Date;
+  created_at?: Date;
 }
 
 export interface TableListPagination {
