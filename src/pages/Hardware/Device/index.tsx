@@ -1,21 +1,34 @@
-import { Button, Divider, Dropdown, Form, Icon, Menu, message } from 'antd';
-import React, { useState, useRef } from 'react';
+import { Button, Divider, Form, Modal, message } from 'antd';
+import React, { useState, useRef, useEffect } from 'react';
+import { connect } from 'dva';
+import { AnyAction, Dispatch } from 'redux';
+import _ from 'lodash';
 
 import { FormComponentProps } from 'antd/es/form';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
-// import UpdateForm, { FormValueType } from './components/UpdateForm';
+import UpdateForm from './components/UpdateForm';
 import { TableListItem } from './data.d';
+import { TableListItem as ProductItem } from '@/pages/Hardware/Product/data.d';
 import { query, update, create, del } from './service';
+import { ProductStateType } from '@/models/product';
 
-interface TableListProps extends FormComponentProps {}
+interface TableListProps extends FormComponentProps {
+  dispatch: Dispatch<AnyAction>;
+  products: ProductItem[];
+  location: {
+    query: {
+      product_key?: string;
+    }
+  };
+}
 
 /**
  * 添加节点
  * @param fields
  */
-const handleAdd = async (fields: TableListItem) => {
+const handleCreate = async (fields: TableListItem) => {
   try {
     await create(fields);
     message.success('添加成功');
@@ -30,51 +43,52 @@ const handleAdd = async (fields: TableListItem) => {
  * 更新节点
  * @param fields
  */
-// const handleUpdate = async (fields: FormValueType) => {
-//   const hide = message.loading('正在配置');
-//   try {
-//     await update({
-//       name: fields.name,
-//       desc: fields.desc,
-//       key: fields.key,
-//     });
-//     hide();
-
-//     message.success('配置成功');
-//     return true;
-//   } catch (error) {
-//     hide();
-//     message.error('配置失败请重试！');
-//     return false;
-//   }
-// };
+const handleUpdate = async (fields: TableListItem) => {
+  try {
+    await update(fields);
+    message.success('保存成功');
+    return true;
+  } catch (error) {
+    message.error('保存失败请重试！');
+    return false;
+  }
+};
 
 /**
  *  删除节点
  * @param selectedRows
  */
-// const handleRemove = async (selectedRows: TableListItem[]) => {
-//   const hide = message.loading('正在删除');
-//   if (!selectedRows) return true;
-//   try {
-//     await del({
-//       key: selectedRows.map(row => row.key),
-//     });
-//     hide();
-//     message.success('删除成功，即将刷新');
-//     return true;
-//   } catch (error) {
-//     hide();
-//     message.error('删除失败，请重试');
-//     return false;
-//   }
-// };
+const handleDelete = async (iotId?: string) => {
+  if (!iotId) return true;
+  try {
+    await del({ iot_id: iotId });
+    message.success('删除成功，即将刷新');
+    return true;
+  } catch (error) {
+    message.error('删除失败，请重试');
+    return false;
+  }
+};
 
-const TableList: React.FC<TableListProps> = () => {
+function handleDelClick(record: TableListItem, actionRef: ActionType) {
+  Modal.confirm({
+    title: `确定删除【设备：${record.name}】？`,
+    okText: '确认',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: async () => {
+      const success = await handleDelete(record.iot_id);
+      if (actionRef && success) actionRef!.reload();
+    },
+  });
+}
+
+const TableList: React.FC<TableListProps> = ({ dispatch, products, location }) => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
-  // const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  // const [stepFormValues, setStepFormValues] = useState({});
+  const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
+  const [formValues, setFormValues] = useState<TableListItem>({});
 
+  const mapByKey = _.keyBy(products, 'product_key');
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
@@ -85,6 +99,7 @@ const TableList: React.FC<TableListProps> = () => {
       title: '所属产品',
       hideInSearch: true,
       dataIndex: 'product_key',
+      renderText: key => mapByKey[key] && mapByKey[key].name,
     },
     {
       title: '节点类型',
@@ -117,12 +132,28 @@ const TableList: React.FC<TableListProps> = () => {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      render: (_, record) => (
+      render: (_, record, _idx, action) => (
         <>
+          <Button 
+            type="link" 
+            onClick={() => {
+              handleUpdateModalVisible(true);
+              setFormValues(record);
+            }}
+          >修改</Button>
+          <Divider type="vertical" />
+          <Button 
+            type="link" 
+            onClick={() => handleDelClick(record, action)}
+          >删除</Button>
         </>
       ),
     },
   ];
+
+  useEffect(() => {
+    dispatch({ type: 'product/fetchAll' });
+  }, []);
 
   return (
     <PageHeaderWrapper
@@ -148,7 +179,11 @@ const TableList: React.FC<TableListProps> = () => {
       />
       <CreateForm
         onSubmit={async value => {
-          const success = await handleAdd(value);
+          const product = mapByKey[value.product_key];
+          const success = await handleCreate({ 
+            ...value, 
+            node_type: product.node_type,
+          });
           if (success) {
             handleModalVisible(false);
             if (actionRef.current) {
@@ -158,14 +193,16 @@ const TableList: React.FC<TableListProps> = () => {
         }}
         onCancel={() => handleModalVisible(false)}
         modalVisible={createModalVisible}
+        products={products}
+        productKey={location.query.product_key}
       />
-      {/* {stepFormValues && Object.keys(stepFormValues).length ? (
+      {formValues && Object.keys(formValues).length ? (
         <UpdateForm
           onSubmit={async value => {
             const success = await handleUpdate(value);
             if (success) {
               handleModalVisible(false);
-              setStepFormValues({});
+              setFormValues({});
               if (actionRef.current) {
                 actionRef.current.reload();
               }
@@ -173,14 +210,16 @@ const TableList: React.FC<TableListProps> = () => {
           }}
           onCancel={() => {
             handleUpdateModalVisible(false);
-            setStepFormValues({});
+            setFormValues({});
           }}
-          updateModalVisible={updateModalVisible}
-          values={stepFormValues}
+          modalVisible={updateModalVisible}
+          values={formValues}
         />
-      ) : null} */}
+      ) : null}
     </PageHeaderWrapper>
   );
 };
 
-export default Form.create<TableListProps>()(TableList);
+export default connect(({ product }: { product: ProductStateType }) => ({
+  products: product.list || [],
+}))(Form.create<TableListProps>()(TableList));

@@ -8,7 +8,7 @@ import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import PButton from '@/components/PermButton';
 import { TableListItem } from './data.d';
-import { query, create, del } from './service';
+import { query, create, del } from '@/services/product';
 
 interface TableListProps extends FormComponentProps {}
 

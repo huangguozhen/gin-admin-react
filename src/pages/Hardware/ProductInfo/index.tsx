@@ -6,7 +6,7 @@ import { Descriptions  } from 'antd';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import router from 'umi/router';
 import Link from 'umi/link';
-import { ProductStateType } from './model';
+import { ProductStateType } from '@/models/product';
 import { DataItem } from './data.d';
 
 interface ProductInfoProps {

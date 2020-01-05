@@ -1,8 +1,7 @@
-import * as roleService from './service';
-
 import { Effect } from 'dva';
 import { Reducer } from 'redux';
 import { message } from 'antd';
+import * as roleService from './service';
 
 export interface ModelState {
   search?: any;

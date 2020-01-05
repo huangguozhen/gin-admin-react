@@ -1,5 +1,5 @@
 export interface TableListItem {
-  iot_id: string;
+  iot_id?: string;
   name: string;
   product_key: string;
   secret?: string;
@@ -8,7 +8,7 @@ export interface TableListItem {
   utc_online?: Date;
   fw_version?: string;
   ip_addr?: string;
-  node_type: number;
+  node_type?: number;
   status?: string;
   updatedAt?: Date;
   createdAt?: Date;

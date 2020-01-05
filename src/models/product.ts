@@ -1,11 +1,12 @@
 import { AnyAction, Reducer } from 'redux';
 
 import { EffectsCommandMap } from 'dva';
-import { DataItem } from './data.d';
-import { query } from './service';
+import { TableListItem } from '@/pages/Hardware/Product/data.d';
+import { queryOne, query } from '@/services/product';
 
 export interface ProductStateType {
-  data: DataItem;
+  data?: TableListItem;
+  list?: TableListItem[];
 }
 
 export type Effect = (
@@ -18,9 +19,11 @@ export interface ModelType {
   state: ProductStateType;
   effects: {
     fetch: Effect;
+    fetchAll: Effect;
   };
   reducers: {
     save: Reducer<ProductStateType>;
+    saveList: Reducer<ProductStateType>;
   };
 }
 
@@ -35,9 +38,16 @@ const Model: ModelType = {
 
   effects: {
     *fetch({ key }, { call, put }) {
-      const response = yield call(query, { key });
+      const response = yield call(queryOne, { key });
       yield put({
         type: 'save',
+        payload: response,
+      });
+    },
+    *fetchAll(_, { call, put }) {
+      const response = yield call(query, { pageSize: 50 });
+      yield put({
+        type: 'saveList',
         payload: response,
       });
     },
@@ -46,6 +56,9 @@ const Model: ModelType = {
   reducers: {
     save(state, { payload }) {
       return { ...state, data: payload };
+    },
+    saveList(state, { payload }) {
+      return { ...state, list: payload.data };
     },
   },
 };

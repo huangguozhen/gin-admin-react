@@ -1,8 +1,7 @@
-import * as menuService from './service';
-
 import { Effect } from 'dva';
 import { Reducer } from 'redux';
 import { message } from 'antd';
+import * as menuService from './service';
 
 export interface ModelState {
   search?: any;

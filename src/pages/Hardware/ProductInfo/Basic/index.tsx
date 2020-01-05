@@ -4,7 +4,7 @@ import { Dispatch } from 'redux';
 import { GridContent } from '@ant-design/pro-layout';
 import { connect } from 'dva';
 import moment from 'moment';
-import { ProductStateType } from '../model';
+import { ProductStateType } from '@/models/product';
 import { DataItem } from '../data.d';
 
 interface ProductBasicProps {
